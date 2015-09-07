@@ -24,9 +24,6 @@
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -------------------------------------------------------------------------------------------------
-# -*- mode: zsh; sh-indentation: 2; indent-tabs-mode: nil; sh-basic-offset: 2; -*-
-# vim: ft=zsh sw=2 ts=2 et
-# -------------------------------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------------------------------
@@ -147,7 +144,7 @@ _zsh_highlight_bind_widgets()
 
     # Override ZLE widgets to make them invoke _zsh_highlight.
     local cur_widget
-    for cur_widget in ${${(f)"$(builtin zle -la)"}:#(.*|_*|orig-*|run-help|beep|auto-*|*-argument|argument-base|clear-screen|describe-key-briefly|kill-buffer|overwrite-mode|push-input|push-line-or-edit|reset-prompt|set-local-history|split-undo|undefined-key|what-cursor-position|where-is)}; do
+    for cur_widget in ${${(f)"$(builtin zle -la)"}:#(.*|_*|orig-*|run-help|beep|auto-*|*-argument|argument-base|clear-screen|describe-key-briefly|history-incremental*|kill-buffer|overwrite-mode|push-input|push-line-or-edit|reset-prompt|set-local-history|split-undo|undefined-key|what-cursor-position|where-is)}; do
 	case $widgets[$cur_widget] in
 
 	    # Already rebound event: do nothing.
@@ -170,6 +167,11 @@ _zsh_highlight_bind_widgets()
 	    # Default: unhandled case.
 	    *) echo "zsh-syntax-highlighting: unhandled ZLE widget '$cur_widget'" >&2 ;;
 	esac
+    done
+
+    # Special treatment of history-incremental* search widgets
+    for search_widget in history-incremental-pattern-search-backward history-incremental-pattern-search-forward history-incremental-search-backward history-incremental-search-forward; do
+	eval "_zsh_highlight_widget_$search_widget () { zle_highlight=(default:fg=white isearch:fg=yellow,bg=red); builtin zle .$search_widget -- \"\$@\" && _zsh_highlight }; zle -N $search_widget _zsh_highlight_widget_$search_widget"
     done
 }
 

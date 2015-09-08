@@ -56,7 +56,8 @@
 : ${ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]:=fg=cyan}
 : ${ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]:=fg=cyan}
 : ${ZSH_HIGHLIGHT_STYLES[assign]:=none}
-: ${ZSH_HIGHLIGHT_STYLES[isearch]:=fg=yellow,bg=red,bold}
+: ${ZSH_HIGHLIGHT_STYLES[search-pattern]:=fg=yellow,bg=red,bold}
+: ${ZSH_HIGHLIGHT_STYLES[search-line]:=fg=white}
 : ${ZSH_HIGHLIGHT_STYLES[region]:=bg=blue}
 : ${ZSH_HIGHLIGHT_STYLES[special]:=none}
 : ${ZSH_HIGHLIGHT_STYLES[suffix]:=none}

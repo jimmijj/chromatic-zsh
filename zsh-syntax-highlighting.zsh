@@ -91,7 +91,7 @@ _zsh_highlight()
 	done
 	
 	# Set zle_highlight according to user definition on this package level
-	zle_highlight=(default:$ZSH_HIGHLIGHT_STYLES[default] isearch:$ZSH_HIGHLIGHT_STYLES[isearch] region:$ZSH_HIGHLIGHT_STYLES[region] special:$ZSH_HIGHLIGHT_STYLES[special] suffix:$ZSH_HIGHLIGHT_STYLES[suffix])
+	zle_highlight=(default:$ZSH_HIGHLIGHT_STYLES[default] isearch:$ZSH_HIGHLIGHT_STYLES[search-pattern] region:$ZSH_HIGHLIGHT_STYLES[region] special:$ZSH_HIGHLIGHT_STYLES[special] suffix:$ZSH_HIGHLIGHT_STYLES[suffix])
 
 	# Bring back region higlighting from zle_highlight array (was overwriten by region_highlight)
 	((REGION_ACTIVE)) && region_highlight+=("$((CURSOR < MARK ? CURSOR : MARK)) $((CURSOR > MARK ? CURSOR : MARK)) ${${(M)zle_highlight[@]:#region*}#region:}")
@@ -171,7 +171,7 @@ _zsh_highlight_bind_widgets()
 
     # Special treatment of history-incremental* search widgets
     for search_widget in history-incremental-pattern-search-backward history-incremental-pattern-search-forward history-incremental-search-backward history-incremental-search-forward; do
-	eval "_zsh_highlight_widget_$search_widget () { zle_highlight=(default:fg=white isearch:fg=yellow,bg=red); builtin zle .$search_widget -- \"\$@\" && _zsh_highlight }; zle -N $search_widget _zsh_highlight_widget_$search_widget"
+	eval "_zsh_highlight_widget_$search_widget () { zle_highlight=(default:\$ZSH_HIGHLIGHT_STYLES[search-line] isearch:\$ZSH_HIGHLIGHT_STYLES[search-pattern]); builtin zle .$search_widget -- \"\$@\" && _zsh_highlight }; zle -N $search_widget _zsh_highlight_widget_$search_widget"
     done
 }
 

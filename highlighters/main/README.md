@@ -47,7 +47,8 @@ This highlighter defines the following styles:
 * `dollar-double-quoted-argument` -  dollar double quoted arguments
 * `back-double-quoted-argument` -  back double quoted arguments
 * `assign` - variable assignments
-* `isearch` - matched string in history-incremental-search* widgets
+* `search-pattern` - matching patterns when searching in history with history-incremental* widgets
+* `search-line` - non-matching part of the command-line with history-incremental* widgets
 * `region` - selected region (between the point and the mark)
 * `special` - unprintable characters
 * `suffix` - suffix characters used in the completion system

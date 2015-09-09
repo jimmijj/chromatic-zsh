@@ -1,7 +1,11 @@
-zsh-syntax-highlighting
+chromatic-zsh
 =======================
 
-Enhanced highlighting of the [Zsh](http://www.zsh.org) command-line, including syntax, paths, files, selected regions, searched patterns and much more.
+The aim of this project is to provide unified colorful [zsh](http://www.zsh.org) environment including syntax, files, selected regions, searched patterns, completion system, etc.
+All objects retain defined attributes, regardless of the context.
+
+Examples
+--------
 
 ![](misc/screenshot.png)
 
@@ -11,18 +15,12 @@ How to install
 
 * Download the script or clone this repository:
 
-        git clone git://github.com/jimmijj/zsh-syntax-highlighting.git
+        git clone git://github.com/jimmijj/chromatic-zsh.git
 
-* Source the script **at the end** of `~/.zshrc`:
+* Source the script
 
-        source /path/to/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+        . /path/to/chromatic-zsh/chromatic-zsh.zsh
 
-* Source `~/.zshrc`  to take changes into account:
+* Add previous line at the end of `~/.zshrc` and start new session.
 
-        source ~/.zshrc
-
-How to tweak
-------------
-
-Syntax highlighting is done by pluggable highlighter scripts, see the [highlighters directory](highlighters)
-for documentation and configuration settings.
+        cat <<<'. /path/to/chromatic-zsh/chromatic-zsh.zsh' >>~/.zshrc && zsh

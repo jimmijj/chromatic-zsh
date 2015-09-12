@@ -32,17 +32,17 @@
 # Define default styles.
 : ${ZSH_HIGHLIGHT_STYLES[default]:=none}
 : ${ZSH_HIGHLIGHT_STYLES[unknown-token]:=fg=red,bold}
-: ${ZSH_HIGHLIGHT_STYLES[reserved-word]:=fg=yellow}
-: ${ZSH_HIGHLIGHT_STYLES[alias]:=fg=green}
-: ${ZSH_HIGHLIGHT_STYLES[builtin]:=fg=green}
-: ${ZSH_HIGHLIGHT_STYLES[function]:=fg=green}
-: ${ZSH_HIGHLIGHT_STYLES[command]:=fg=green}
+: ${ZSH_HIGHLIGHT_STYLES[reserved-words]:=fg=yellow}
+: ${ZSH_HIGHLIGHT_STYLES[aliases]:=fg=green}
+: ${ZSH_HIGHLIGHT_STYLES[builtins]:=fg=green}
+: ${ZSH_HIGHLIGHT_STYLES[functions]:=fg=green}
+: ${ZSH_HIGHLIGHT_STYLES[commands]:=fg=green}
 : ${ZSH_HIGHLIGHT_STYLES[command_prefix]:=fg=green}
 : ${ZSH_HIGHLIGHT_STYLES[precommand]:=fg=green,underline}
 : ${ZSH_HIGHLIGHT_STYLES[commandseparator]:=none}
 : ${ZSH_HIGHLIGHT_STYLES[redirection]:=fg=magenta}
 : ${ZSH_HIGHLIGHT_STYLES[hashed-command]:=fg=green}
-: ${ZSH_HIGHLIGHT_STYLES[path]:=underline}
+: ${ZSH_HIGHLIGHT_STYLES[directories]:=underline}
 : ${ZSH_HIGHLIGHT_STYLES[path_prefix]:=underline}
 : ${ZSH_HIGHLIGHT_STYLES[path_approx]:=fg=yellow,underline}
 : ${ZSH_HIGHLIGHT_STYLES[file]:=}
@@ -158,14 +158,14 @@ _zsh_highlight_main_highlighter()
      else
       res=$(LC_ALL=C builtin type -w $arg 2>/dev/null)
       case $res in
-        *': reserved')  style=$ZSH_HIGHLIGHT_STYLES[reserved-word];;
-        *': alias')     style=$ZSH_HIGHLIGHT_STYLES[alias]
+        *': reserved')  style=$ZSH_HIGHLIGHT_STYLES[reserved-words];;
+        *': alias')     style=$ZSH_HIGHLIGHT_STYLES[aliases]
                         local aliased_command="${"$(alias -- $arg)"#*=}"
                         [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$aliased_command"} && -z ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS+=($arg)
                         ;;
-        *': builtin')   style=$ZSH_HIGHLIGHT_STYLES[builtin];;
-        *': function')  style=$ZSH_HIGHLIGHT_STYLES[function];;
-        *': command')   style=$ZSH_HIGHLIGHT_STYLES[command];;
+        *': builtin')   style=$ZSH_HIGHLIGHT_STYLES[builtins];;
+        *': function')  style=$ZSH_HIGHLIGHT_STYLES[functions];;
+        *': command')   style=$ZSH_HIGHLIGHT_STYLES[commands];;
         *': hashed')    style=$ZSH_HIGHLIGHT_STYLES[hashed-command];;
         *)              if _zsh_highlight_main_highlighter_check_assign; then
                           style=$ZSH_HIGHLIGHT_STYLES[assign]
@@ -173,7 +173,7 @@ _zsh_highlight_main_highlighter()
                         elif _zsh_highlight_main_highlighter_check_command; then
                           style=$ZSH_HIGHLIGHT_STYLES[command_prefix]
                         elif _zsh_highlight_main_highlighter_check_path; then
-                          style=$ZSH_HIGHLIGHT_STYLES[path]
+                          style=$ZSH_HIGHLIGHT_STYLES[directories]
                         elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
                           style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
                         elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
@@ -200,7 +200,7 @@ _zsh_highlight_main_highlighter()
         '`'*'`') style=$ZSH_HIGHLIGHT_STYLES[back-quoted-argument];;
         *"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
         *)       if _zsh_highlight_main_highlighter_check_path; then
-                   style=$ZSH_HIGHLIGHT_STYLES[path]
+                   style=$ZSH_HIGHLIGHT_STYLES[directories]
                  elif [[ $arg[0,1] = $histchars[0,1] ]]; then
                    style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
                  elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then

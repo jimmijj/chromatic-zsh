@@ -1,6 +1,5 @@
 #!/usr/bin/env zsh
 
-echo $0
-. ~/software/chromatic-zsh/config
-. ~/software/chromatic-zsh/completion.zsh
-. ~/software/chromatic-zsh/zsh-syntax-highlighting.zsh
+. "${0:h}"/config.zsh
+. "${0:h}"/completion.zsh
+. "${0:h}"/zsh-syntax-highlighting.zsh

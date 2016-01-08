@@ -30,26 +30,27 @@
 
 
 # Define default styles.
-: ${ZSH_HIGHLIGHT_STYLES[default]:=none}
-: ${ZSH_HIGHLIGHT_STYLES[unknown-token]:=fg=red,bold}
 : ${ZSH_HIGHLIGHT_STYLES[reserved-words]:=fg=yellow}
 : ${ZSH_HIGHLIGHT_STYLES[aliases]:=fg=green}
 : ${ZSH_HIGHLIGHT_STYLES[builtins]:=fg=green}
 : ${ZSH_HIGHLIGHT_STYLES[functions]:=fg=green}
 : ${ZSH_HIGHLIGHT_STYLES[commands]:=fg=green}
+: ${ZSH_HIGHLIGHT_STYLES[directories]:=underline}
+: ${ZSH_HIGHLIGHT_STYLES[options]:=none}
+
+
+: ${ZSH_HIGHLIGHT_STYLES[default]:=none}
+: ${ZSH_HIGHLIGHT_STYLES[unknown-token]:=fg=red,bold}
 : ${ZSH_HIGHLIGHT_STYLES[command_prefix]:=fg=green}
 : ${ZSH_HIGHLIGHT_STYLES[precommand]:=fg=green,underline}
 : ${ZSH_HIGHLIGHT_STYLES[commandseparator]:=none}
 : ${ZSH_HIGHLIGHT_STYLES[redirection]:=fg=magenta}
 : ${ZSH_HIGHLIGHT_STYLES[hashed-command]:=fg=green}
-: ${ZSH_HIGHLIGHT_STYLES[directories]:=underline}
 : ${ZSH_HIGHLIGHT_STYLES[path_prefix]:=underline}
 : ${ZSH_HIGHLIGHT_STYLES[path_approx]:=fg=yellow,underline}
 : ${ZSH_HIGHLIGHT_STYLES[file]:=}
 : ${ZSH_HIGHLIGHT_STYLES[globbing]:=fg=blue}
 : ${ZSH_HIGHLIGHT_STYLES[history-expansion]:=fg=blue}
-: ${ZSH_HIGHLIGHT_STYLES[single-hyphen-option]:=none}
-: ${ZSH_HIGHLIGHT_STYLES[double-hyphen-option]:=none}
 : ${ZSH_HIGHLIGHT_STYLES[back-quoted-argument]:=none}
 : ${ZSH_HIGHLIGHT_STYLES[single-quoted-argument]:=fg=yellow}
 : ${ZSH_HIGHLIGHT_STYLES[double-quoted-argument]:=fg=yellow}
@@ -189,8 +190,8 @@ _zsh_highlight_main_highlighter()
      fi
     else
       case $arg in
-        '--'*)   style=$ZSH_HIGHLIGHT_STYLES[double-hyphen-option];;
-        '-'*)    style=$ZSH_HIGHLIGHT_STYLES[single-hyphen-option];;
+        '--'*|'-'*)   style=$ZSH_HIGHLIGHT_STYLES[options];;
+
         "'"*"'") style=$ZSH_HIGHLIGHT_STYLES[single-quoted-argument];;
         '"'*'"') style=$ZSH_HIGHLIGHT_STYLES[double-quoted-argument]
                  region_highlight+=("$start_pos $end_pos $style")

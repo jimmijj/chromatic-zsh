@@ -27,13 +27,7 @@
 
 
 # Define default styles.
-: ${ZSH_HIGHLIGHT_STYLES[reserved-words]:=fg=yellow}
-: ${ZSH_HIGHLIGHT_STYLES[aliases]:=fg=green}
-: ${ZSH_HIGHLIGHT_STYLES[builtins]:=fg=green}
-: ${ZSH_HIGHLIGHT_STYLES[functions]:=fg=green}
-: ${ZSH_HIGHLIGHT_STYLES[commands]:=fg=green}
-: ${ZSH_HIGHLIGHT_STYLES[directories]:=underline}
-: ${ZSH_HIGHLIGHT_STYLES[options]:=none}
+ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 
 
 : ${ZSH_HIGHLIGHT_STYLES[default]:=none}
@@ -311,20 +305,19 @@ _zsh_highlight_main_highlighter_check_command()
 _zsh_highlight_files_highlighter_fill_table_of_types()
 {
   local group type code ncolors=$(echotc Co)
-  local -a attrib
 
   for group in ${(s.:.)LS_COLORS}; do
     type="${group%=*}"
     code="${group#*=}"
-    attrib=()
     takeattrib ${(s.;.)code}
-    ZSH_HIGHLIGHT_FILES+=("$type" "${(j:,:)attrib}")
+    ZSH_HIGHLIGHT_FILES+=("$type" "$code")
   done
 }
 
-## Take attributes from unfolded $LS_COLORS code
+## Return attribute in the format compatible with zle_highlight, unfolded from color code
 takeattrib()
 {
+    local -a attrib
     while [ "$#" -gt 0 ]; do
 	[[ "$1" == 38 && "$2" == 5 ]] && {attrib+=("fg=$3"); shift 3; continue}
 	[[ "$1" == 48 && "$2" == 5 ]] && {attrib+=("bg=$3"); shift 3; continue}
@@ -344,6 +337,7 @@ takeattrib()
             *) shift;;
         esac
     done
+    code="${(j:,:)attrib}"
 }
 
 ## Check if the argument is a file, if yes change the style accordingly

@@ -1,6 +1,6 @@
 # Default atrributes
 
-typeset -A __chromatic_attrib
+declare -A __chromatic_attrib
 
 local ncolors=$(echotc Co)
 

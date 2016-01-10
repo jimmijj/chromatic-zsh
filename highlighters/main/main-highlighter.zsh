@@ -24,9 +24,6 @@
 # IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
 # OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # -------------------------------------------------------------------------------------------------
-# -*- mode: zsh; sh-indentation: 2; indent-tabs-mode: nil; sh-basic-offset: 2; -*-
-# vim: ft=zsh sw=2 ts=2 et
-# -------------------------------------------------------------------------------------------------
 
 
 # Define default styles.
@@ -317,11 +314,11 @@ _zsh_highlight_files_highlighter_fill_table_of_types()
   local -a attrib
 
   for group in ${(s.:.)LS_COLORS}; do
-    type=${group%=*}
-    code=${group#*=}
+    type="${group%=*}"
+    code="${group#*=}"
     attrib=()
     takeattrib ${(s.;.)code}
-    ZSH_HIGHLIGHT_FILES+=($type ${(j.,.)attrib})
+    ZSH_HIGHLIGHT_FILES+=("$type" "${(j:,:)attrib}")
   done
 }
 
@@ -329,8 +326,8 @@ _zsh_highlight_files_highlighter_fill_table_of_types()
 takeattrib()
 {
     while [ "$#" -gt 0 ]; do
-	[[ $1 == 38 && $2 == 5 ]] && {attrib+=("fg=$3"); shift 3; continue}
-	[[ $1 == 48 && $2 == 5 ]] && {attrib+=("bg=$3"); shift 3; continue}
+	[[ "$1" == 38 && "$2" == 5 ]] && {attrib+=("fg=$3"); shift 3; continue}
+	[[ "$1" == 48 && "$2" == 5 ]] && {attrib+=("bg=$3"); shift 3; continue}
 	case $1 in
 	    00|0) attrib+=("none"); shift;;
             01|1) attrib+=("bold" ); shift;;
@@ -342,8 +339,8 @@ takeattrib()
             08|8) attrib+=("concealed"); shift;;
             3[0-7]) attrib+=("fg=$(($1-30))"); shift;;
             4[0-7]) attrib+=("bg=$(($1-40))"); shift;;
-            9[0-7]) [[ $ncolors == 256 ]] && attrib+=("fg=$(($1-82))") || attrib+=("fg=$(($1-90))" "bold"); shift;;
-            10[0-7]) [[ $ncolors == 256 ]] && attrib+=("bg=$(($1-92))") || attrib+=("bg=$(($1-100))" "bold"); shift;;
+            9[0-7]) [[ "$ncolors" == 256 ]] && attrib+=("fg=$(($1-82))") || attrib+=("fg=$(($1-90))" "bold"); shift;;
+            10[0-7]) [[ "$ncolors" == 256 ]] && attrib+=("bg=$(($1-92))") || attrib+=("bg=$(($1-100))" "bold"); shift;;
             *) shift;;
         esac
     done
@@ -355,36 +352,36 @@ _zsh_highlight_main_highlighter_check_file()
     setopt localoptions nonomatch
     local expanded_arg matched_file
 
-    expanded_arg=${(Q)~arg}
-    [[ -z $expanded_arg ]] && return 1
-    [[ -d $expanded_arg ]] && return 1
-    [[ ${BUFFER[1]} != "-" && ${#LBUFFER} == $end_pos ]] && matched_file=(${expanded_arg}*(Noa^/[1]))
-    [[ -e $expanded_arg || -e $matched_file ]] && lsstyle=none || return 1
-    [[ -e $matched_file ]] && _zsh_highlight_main_highlighter_predicate_switcher bc
+    expanded_arg="${(Q)~arg}"
+    [[ -z "$expanded_arg" ]] && return 1
+    [[ -d "$expanded_arg" ]] && return 1
+    [[ "${BUFFER[1]}" != "-" && "${#LBUFFER}" == "$end_pos" ]] && matched_file=("${expanded_arg}"*(Noa^/[1]))
+    [[ -e "$expanded_arg" || -e "$matched_file" ]] && lsstyle=none || return 1
+    [[ -e "$matched_file" ]] && _zsh_highlight_main_highlighter_predicate_switcher bc
 
-    [[ ! -z $ZSH_HIGHLIGHT_STYLES[file] ]] && lsstyle=$ZSH_HIGHLIGHT_STYLES[file] && return 0
+    [[ ! -z "${ZSH_HIGHLIGHT_STYLES[file]}" ]] && lsstyle="${ZSH_HIGHLIGHT_STYLES[file]}" && return 0
 
     # [[ rs ]]
     # [[ -d $expanded_arg || -d $matched_file ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[di] && return 0
-    [[ -h $expanded_arg || -h $matched_file ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[ln] && return 0
+    [[ -h "$expanded_arg" || -h "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[ln]}" && return 0
     # [[ mh ]]
-    [[ -p $expanded_arg || -p $matched_file ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[pi] && return 0
-    [[ -S $expanded_arg || -S $matched_file ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[so] && return 0
+    [[ -p "$expanded_arg" || -p "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[pi]}" && return 0
+    [[ -S "$expanded_arg" || -S "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[so]}" && return 0
     # [[ do ]]
-    [[ -b $expanded_arg || -b $matched_file ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[bd] && return 0
-    [[ -c $expanded_arg || -c $matched_file ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[cd] && return 0
+    [[ -b "$expanded_arg" || -b "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[bd]}" && return 0
+    [[ -c "$expanded_arg" || -c "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[cd]}" && return 0
     # [[ or ]]
     # [[ mi ]]
-    [[ -u $expanded_arg || -u $matched_file ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[su] && return 0
-    [[ -g $expanded_arg || -g $matched_file ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[sg] && return 0
+    [[ -u "$expanded_arg" || -u "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[su]}" && return 0
+    [[ -g "$expanded_arg" || -g "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[sg]}" && return 0
     # [[ ca ]]
     # [[ tw ]]
     # [[ ow ]]
-    [[ -k $expanded_arg || -k $matched_file ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[st] && return 0
-    [[ -x $expanded_arg || -x $matched_file ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[ex] && return 0
+    [[ -k "$expanded_arg" || -k "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[st]}" && return 0
+    [[ -x "$expanded_arg" || -x "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[ex]}" && return 0
 
-    [[ -e $expanded_arg ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[*.$expanded_arg:e] && return 0
-    [[ -n $matched_file:e ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[*.$matched_file:e] && return 0
+    [[ -e "$expanded_arg" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[*.$expanded_arg:e]}" && return 0
+    [[ -n "$matched_file:e" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[*.$matched_file:e]}" && return 0
 
     return 0
 }

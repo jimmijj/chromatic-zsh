@@ -17,10 +17,8 @@ How to install
 
         git clone git://github.com/jimmijj/chromatic-zsh.git
 
-* Source the script
+* Add full path of the script at the end of `~/.zshrc` and start new session:
 
-        . /path/to/chromatic-zsh/chromatic-zsh.zsh
+        echo '. /path/to/chromatic-zsh/chromatic-zsh.zsh' >>~/.zshrc
 
-* Add previous line at the end of `~/.zshrc` and start new session.
-
-        cat <<<'. /path/to/chromatic-zsh/chromatic-zsh.zsh' >>~/.zshrc && zsh
+* Start new session with `zsh`.

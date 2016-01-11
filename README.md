@@ -32,17 +32,17 @@ Installation procedure
 
 Examples
 ----------------------------------------------------------------------
- - The basic `ls` output with `--color` option (on GNU) uses `$LS_COLORS` environment variable to attache color for each file type. Say the result looks like that: 
+ - The basic `ls` output with `--color` option (on GNU system) uses `$LS_COLORS` environment variable to attache color to each file type. The result may look like that: 
 
    ![](misc/ls.png)
 
- - The chromatic-zsh uses the same color for completion system...
+ - One expects that the same color is used in completion system
 
    ![](misc/ls_comp.png)
 
    (note: at the end of the line `tab` was hit)
 
-- and systax highlighting:
+- and also syntax highlighting on the command line:
 
   ![](misc/ls_high.png)
 

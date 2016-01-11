@@ -33,34 +33,46 @@ Installation procedure
 Examples
 ----------------------------------------------------------------------
  - The basic `ls` output with `--color` option (on GNU) uses `$LS_COLORS` environment variable to attache color for each file type. Say the result looks like that: 
+
 ![](misc/ls.png)
 
  - The chromatic-zsh uses the same color for completion system...
+
 ![](misc/ls_comp.png)
+
 (note: at the end of the line `tab` was hit)
 
 - and systax highlighting:
+
  ![](misc/ls_high.png)
 
 - Options and their descriptions are highlighted differently:
+
 ![](misc/ls_opt.png)
+
 (again notice tab after `-`)
 
 - Here is the sample of some longer command line...
+
 ![](misc/screenshot.png)
 
 - and completion with many categories:
+
 ![](misc/comp.png)
+
 Notice the same color for the same group (reserved words, parameters, etc) on the command line and completion system.
 
 - Directories are always in blue, also in the directory stack completion of `cd -`.
+
 ![](misc/cd_comp.png)
 
 - Process ids are red by default, clearly separated from pseudotermianal numbers
 ![](misc/kill_comp.png)
 
 - Last example: searched pattern looks the same regardless where search took place: shell history or grep command
+
 ![](misc/search.png)
+
 ![](misc/grep.png)
 
 

@@ -32,7 +32,7 @@ Installation procedure
 
 Examples
 ----------------------------------------------------------------------
- - The basic `ls` output with `--color` option (on GNU system) uses `$LS_COLORS` environment variable to attache color to each file type. The result may look like that: 
+ - The basic `ls` output with `--color` option (on GNU system) uses `$LS_COLORS` environment variable to attach color to each file type. The result may look like that: 
 
    ![](misc/ls.png)
 
@@ -60,13 +60,13 @@ Examples
 
   ![](misc/comp.png)
 
-  Notice the same color for the same group (reserved words, parameters, etc) on the command line and completion system.
+  Notice the same color for the same group (reserved words, parameters, etc) on the command line and completion system with the example above.
 
-- Directories are always in blue, also in the directory stack completion of `cd -`.
+- Directories are in blue everywhere, also in the directory stack completion of `cd -`.
 
   ![](misc/cd_comp.png)
 
-- Process ids are red by default, clearly separated from pseudotermianal numbers
+- Process ids are red by default, clearly separated from pseudoterminal numbers
 
   ![](misc/kill_comp.png)
 

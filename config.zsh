@@ -18,7 +18,7 @@ __chromatic_attrib=(
     process-names  '1;33'
     reserved-words '31'
     search-line    '37'
-    search-pattern '01;33;41'
+    search-pattern '1;33;41'
     separators     '35'
 )
 

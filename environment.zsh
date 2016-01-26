@@ -1,1 +1,1 @@
-export GREP_COLORS="ms=01;33;41:mc=01;33;41:sl=37:cx=38;5;244:fn=38;5;34:ln=38;5;36:bn=38;5;114:se=35:"
+export GREP_COLORS="ms=${__chromatic_attrib[search-pattern]}:mc=${__chromatic_attrib[search-pattern]}:sl=${__chromatic_attrib[search-line]}:cx=38;5;244:fn=${__chromatic_attrib[manuals]}:ln=${__chromatic_attrib[numbers]}:bn=${__chromatic_attrib[options]}:se=${__chromatic_attrib[separators]}"

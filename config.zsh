@@ -1,36 +1,41 @@
 # Default atrributes
 
+local ncolors="$(echotc Co)"
 declare -A __chromatic_attrib __chromatic_attrib_zle
 
-local ncolors=$(echotc Co)
+__chromatic_attrib=(
+    aliases        '1;35'
+    builtins       '1;33'
+    commands       '1;33'
+    comments       '2;37'
+    directories    '1;34'
+    functions      '33'
+    manuals        '32'
+    numbers        '2;36'
+    options        '36'
+    parameters     '32'
+    process-ids    '1;31'
+    process-names  '1;33'
+    reserved-words '31'
+    search-line    '37'
+    search-pattern '01;33;41'
+    separators     '35'
+)
 
-if [[ $ncolors == 256 ]]; then
-    __chromatic_attrib=(
-	commands       '38;5;77'
-	builtins       '38;5;83'
-	functions      '38;5;134'
+if [[ "$ncolors" == 256 ]]; then
+    __chromatic_attrib+=(
 	aliases        '38;5;128'
-	parameters     '38;5;28'
-	reserved-words '31'
-	manuals        '38;5;34'
-	options        '38;5;71'
+	builtins       '38;5;83'
+	commands       '38;5;77'
+	comments       '38;5;244'
 	directories    '38;5;12'
+	functions      '38;5;134'
+	manuals        '38;5;34'
+	numbers        '38;5;36'
+	options        '38;5;71'
+	parameters     '38;5;28'
         process-ids    '38;5;196'
 	process-names  '33'
-    )
-else
-    __chromatic_attrib=(
-	commands       '1;33'
-	builtins       '1;33'
-	functions      '33'
-	aliases        '1;35'
-	parameters     '32'
-	reserved-words '31'
-	manuals        '32'
-	options        '36'
-	directories    '1;34'
-        process-ids    '1;31'
-        process-names  '1;33'
     )
 fi
 

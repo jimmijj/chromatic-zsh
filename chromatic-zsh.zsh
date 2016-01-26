@@ -3,3 +3,4 @@
 . "${0:h}"/config.zsh
 . "${0:h}"/completion.zsh
 . "${0:h}"/zsh-syntax-highlighting.zsh
+. "${0:h}"/environment.zsh

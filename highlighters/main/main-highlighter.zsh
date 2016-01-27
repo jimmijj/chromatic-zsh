@@ -37,7 +37,6 @@ ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 : ${ZSH_HIGHLIGHT_STYLES[redirection]:=fg=magenta}
 : ${ZSH_HIGHLIGHT_STYLES[hashed-command]:=fg=green}
 : ${ZSH_HIGHLIGHT_STYLES[path_prefix]:=underline}
-: ${ZSH_HIGHLIGHT_STYLES[path_approx]:=fg=yellow,underline}
 : ${ZSH_HIGHLIGHT_STYLES[file]:=}
 : ${ZSH_HIGHLIGHT_STYLES[globbing]:=fg=blue}
 : ${ZSH_HIGHLIGHT_STYLES[history-expansion]:=fg=blue}
@@ -47,8 +46,6 @@ ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 : ${ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]:=fg=cyan}
 : ${ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]:=fg=cyan}
 : ${ZSH_HIGHLIGHT_STYLES[assign]:=none}
-: ${ZSH_HIGHLIGHT_STYLES[search-pattern]:=fg=yellow,bg=red,bold}
-: ${ZSH_HIGHLIGHT_STYLES[search-line]:=fg=white}
 : ${ZSH_HIGHLIGHT_STYLES[region]:=bg=blue}
 : ${ZSH_HIGHLIGHT_STYLES[special]:=none}
 : ${ZSH_HIGHLIGHT_STYLES[suffix]:=none}
@@ -244,9 +241,6 @@ _zsh_highlight_main_highlighter_check_path()
     # got a path prefix?
     tmp=( ${expanded_path}*(N) )
     (( $#tmp > 0 )) && style_override=path_prefix && _zsh_highlight_main_highlighter_predicate_switcher bc && return 0
-    # or maybe an approximate path?
-    tmp=( (#a1)${expanded_path}*(N) )
-    (( $#arg > 3 && $#tmp > 0 )) && style_override=path_approx && return 0
   fi
   return 1
 }

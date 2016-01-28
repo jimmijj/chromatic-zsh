@@ -40,8 +40,6 @@ ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 : ${ZSH_HIGHLIGHT_STYLES[file]:=}
 : ${ZSH_HIGHLIGHT_STYLES[globbing]:=fg=blue}
 : ${ZSH_HIGHLIGHT_STYLES[history-expansion]:=fg=blue}
-: ${ZSH_HIGHLIGHT_STYLES[command-substitution]:=none}
-: ${ZSH_HIGHLIGHT_STYLES[process-substitution]:=none}
 : ${ZSH_HIGHLIGHT_STYLES[single-quoted-argument]:=fg=yellow}
 : ${ZSH_HIGHLIGHT_STYLES[double-quoted-argument]:=fg=yellow}
 : ${ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]:=fg=cyan}
@@ -186,11 +184,21 @@ _zsh_highlight_main_highlighter()
 			    substr_color=1
 			    ;;
 		   '$(('*'))') style=$ZSH_HIGHLIGHT_STYLES[numbers];;
-		   '$('*')') style=$ZSH_HIGHLIGHT_STYLES[command-substitution];;
-		   '`'*'`')  style=$ZSH_HIGHLIGHT_STYLES[command-substitution];;
-		   '$(<'*')') style=$ZSH_HIGHLIGHT_STYLES[command-substitution];;
-		   '<('*')') style=$ZSH_HIGHLIGHT_STYLES[process-substitution];;
-		   '>('*')') style=$ZSH_HIGHLIGHT_STYLES[process-substitution];;
+		   '$('*')')
+		       region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[commands]}")
+		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[commands]}")
+		       substr_color=1
+		       ;;
+		   '`'*'`')
+		       region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle[commands]}")
+		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[commands]}")
+		       substr_color=1
+		       ;;
+		   '<('*')'|'>('*')'|'=('*')') 
+		       region_highlight+=("$start_pos $((start_pos+2)) ${ZSH_HIGHLIGHT_FILES[cd]}")
+		       region_highlight+=("$((end_pos-1)) $end_pos ${ZSH_HIGHLIGHT_FILES[cd]}")
+		       substr_color=1
+		       ;;
 		   *"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
 		   *)       if _zsh_highlight_main_highlighter_check_path; then
 				style=$ZSH_HIGHLIGHT_STYLES[directories]

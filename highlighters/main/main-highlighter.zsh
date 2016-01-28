@@ -40,7 +40,8 @@ ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 : ${ZSH_HIGHLIGHT_STYLES[file]:=}
 : ${ZSH_HIGHLIGHT_STYLES[globbing]:=fg=blue}
 : ${ZSH_HIGHLIGHT_STYLES[history-expansion]:=fg=blue}
-: ${ZSH_HIGHLIGHT_STYLES[back-quoted-argument]:=none}
+: ${ZSH_HIGHLIGHT_STYLES[command-substitution]:=none}
+: ${ZSH_HIGHLIGHT_STYLES[process-substitution]:=none}
 : ${ZSH_HIGHLIGHT_STYLES[single-quoted-argument]:=fg=yellow}
 : ${ZSH_HIGHLIGHT_STYLES[double-quoted-argument]:=fg=yellow}
 : ${ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]:=fg=cyan}
@@ -53,7 +54,7 @@ ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 # Whether the highlighter should be called or not.
 _zsh_highlight_main_highlighter_predicate()
 {
-  _zsh_highlight_buffer_modified
+    _zsh_highlight_buffer_modified
 }
 
 ## In case we need to highlight in other circumstances then default from highlighter_predicate lets define a switcher
@@ -61,22 +62,22 @@ _zsh_highlight_main_highlighter_predicate_switcher()
 {
     case $1 in
 	'b') # buffer
-           _zsh_highlight_main_highlighter_predicate()
-	   {
-	       _zsh_highlight_buffer_modified
-	   };;
+            _zsh_highlight_main_highlighter_predicate()
+	    {
+		_zsh_highlight_buffer_modified
+	    };;
 	'c') # cursor
-	   _zsh_highlight_main_highlighter_predicate()
-	   {
-	       _zsh_highlight_cursor_moved
-	   };;
+	    _zsh_highlight_main_highlighter_predicate()
+	    {
+		_zsh_highlight_cursor_moved
+	    };;
 	'bc') bccounter=0 # buffer and cursor
-	   _zsh_highlight_main_highlighter_predicate()
-	   {
-	       bccounter=$((bccounter+1))
-	       (( $bccounter > 1 )) && _zsh_highlight_main_highlighter_predicate_switcher b
-	       _zsh_highlight_cursor_moved || _zsh_highlight_buffer_modified
-	   };;
+	      _zsh_highlight_main_highlighter_predicate()
+	      {
+		  bccounter=$((bccounter+1))
+		  (( $bccounter > 1 )) && _zsh_highlight_main_highlighter_predicate_switcher b
+		  _zsh_highlight_cursor_moved || _zsh_highlight_buffer_modified
+	      };;
 	*);;
     esac
 }
@@ -84,136 +85,140 @@ _zsh_highlight_main_highlighter_predicate_switcher()
 # Main syntax highlighting function.
 _zsh_highlight_main_highlighter()
 {
-  emulate -L zsh
-  setopt localoptions extendedglob bareglobqual
-  local start_pos=0 end_pos highlight_glob=true new_expression=true arg style lsstyle start_file_pos end_file_pos sudo=false sudo_arg=false
-  typeset -a ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR
-  typeset -a ZSH_HIGHLIGHT_TOKENS_REDIRECTION
-  typeset -a ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
-  typeset -a ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS
-  region_highlight=()
+    emulate -L zsh
+    setopt localoptions extendedglob bareglobqual
+    local start_pos=0 end_pos highlight_glob=true new_expression=true arg style lsstyle start_file_pos end_file_pos sudo=false sudo_arg=false
+    typeset -a ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR
+    typeset -a ZSH_HIGHLIGHT_TOKENS_REDIRECTION
+    typeset -a ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
+    typeset -a ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS
+    region_highlight=()
 
-  ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR=(
-    '|' '||' ';' '&' '&&' '&|' '|&' '&!'
-  )
-  ZSH_HIGHLIGHT_TOKENS_REDIRECTION=(
-    '<' '<>' '>' '>|' '>!' '>>' '>>|' '>>!' '<<' '<<-' '<<<' '<&' '>&' '<& -' '>& -' '<& p' '>& p' '&>' '>&|' '>&!' '&>|' '&>!' '>>&' '&>>' '>>&|' '>>&!' '&>>|' '&>>!'
-  )
-  ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS=(
-    'builtin' 'command' 'exec' 'functions' 'nocorrect' 'noglob' 'type' 'unalias' 'unhash' 'whence' 'where' 'which'
-  )
-  # Tokens that are always immediately followed by a command.
-  ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS=(
-    $ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR $ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
-  )
+    ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR=(
+	'|' '||' ';' '&' '&&' '&|' '|&' '&!'
+    )
+    ZSH_HIGHLIGHT_TOKENS_REDIRECTION=(
+	'<' '<>' '>' '>|' '>!' '>>' '>>|' '>>!' '<<' '<<-' '<<<' '<&' '>&' '<& -' '>& -' '<& p' '>& p' '&>' '>&|' '>&!' '&>|' '&>!' '>>&' '&>>' '>>&|' '>>&!' '&>>|' '&>>!'
+    )
+    ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS=(
+	'builtin' 'command' 'exec' 'functions' 'nocorrect' 'noglob' 'type' 'unalias' 'unhash' 'whence' 'where' 'which'
+    )
+    # Tokens that are always immediately followed by a command.
+    ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS=(
+	$ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR $ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
+    )
 
-  splitbuf1=(${(z)BUFFER})
-  splitbuf2=(${(z)BUFFER//$'\n'/ \$\'\\\\n\' }) # ugly hack, but I have no other idea
-  local argnum=0
-  for arg in ${(z)BUFFER}; do
-    argnum=$((argnum+1))
-    if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && new_expression=true && continue
+    splitbuf1=(${(z)BUFFER})
+    splitbuf2=(${(z)BUFFER//$'\n'/ \$\'\\\\n\' }) # ugly hack, but I have no other idea
+    local argnum=0
+    for arg in ${(z)BUFFER}; do
+	argnum=$((argnum+1))
+	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && new_expression=true && continue
 
-    local substr_color=0 isfile=false
-    local style_override=""
-    [[ $start_pos -eq 0 && $arg = 'noglob' ]] && highlight_glob=false
-    ((start_pos+=${#BUFFER[$start_pos+1,-1]}-${#${BUFFER[$start_pos+1,-1]##[[:space:]]#}}))
-    ((end_pos=$start_pos+${#arg}))
+	   local substr_color=0 isfile=false
+	   local style_override=""
+	   [[ $start_pos -eq 0 && $arg = 'noglob' ]] && highlight_glob=false
+	   ((start_pos+=${#BUFFER[$start_pos+1,-1]}-${#${BUFFER[$start_pos+1,-1]##[[:space:]]#}}))
+	   ((end_pos=$start_pos+${#arg}))
 
-    # Parse the sudo command line
-    if $sudo; then
-      case "$arg" in
-        # Flag that requires an argument
-        '-'[Cgprtu]) sudo_arg=true;;
-        # This prevents misbehavior with sudo -u -otherargument
-        '-'*)        sudo_arg=false;;
-        *)           if $sudo_arg; then
-                       sudo_arg=false
-                     else
-                       sudo=false
-                       new_expression=true
-                     fi
-                     ;;
-      esac
-    fi
-    if $new_expression; then
-      new_expression=false
-     if [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS:#"$arg"} ]]; then
-      style=$ZSH_HIGHLIGHT_STYLES[precommand]
-     elif [[ "$arg" = "sudo" ]]; then
-      style=$ZSH_HIGHLIGHT_STYLES[precommand]
-      sudo=true
-     else
-      res=$(LC_ALL=C builtin type -w $arg 2>/dev/null)
-      case $res in
-        *': reserved')  style=$ZSH_HIGHLIGHT_STYLES[reserved-words];;
-        *': alias')     style=$ZSH_HIGHLIGHT_STYLES[aliases]
-                        local aliased_command="${"$(alias -- $arg)"#*=}"
-                        [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$aliased_command"} && -z ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS+=($arg)
-                        ;;
-        *': builtin')   style=$ZSH_HIGHLIGHT_STYLES[builtins];;
-        *': function')  style=$ZSH_HIGHLIGHT_STYLES[functions];;
-        *': command')   style=$ZSH_HIGHLIGHT_STYLES[commands];;
-        *': hashed')    style=$ZSH_HIGHLIGHT_STYLES[hashed-command];;
-        *)              if _zsh_highlight_main_highlighter_check_assign; then
-                          style=$ZSH_HIGHLIGHT_STYLES[assign]
-                          new_expression=true
-                        elif _zsh_highlight_main_highlighter_check_command; then
-                          style=$ZSH_HIGHLIGHT_STYLES[command_prefix]
-                        elif _zsh_highlight_main_highlighter_check_path; then
-                          style=$ZSH_HIGHLIGHT_STYLES[directories]
-                        elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
-                          style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
-                        elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
-			  style=$ZSH_HIGHLIGHT_STYLES[separators]
-                        elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
-			    style=$ZSH_HIGHLIGHT_STYLES[redirection]
-                        else
-                          style=$ZSH_HIGHLIGHT_STYLES[unknown-token]
-                        fi
-                        _zsh_highlight_main_highlighter_check_file && isfile=true
-                        ;;
-      esac
-     fi
-    else
-      case $arg in
-        '--'*|'-'*)   style=$ZSH_HIGHLIGHT_STYLES[options];;
-
-        "'"*"'") style=$ZSH_HIGHLIGHT_STYLES[single-quoted-argument];;
-        '"'*'"') style=$ZSH_HIGHLIGHT_STYLES[double-quoted-argument]
-                 region_highlight+=("$start_pos $end_pos $style")
-                 _zsh_highlight_main_highlighter_highlight_string
-                 substr_color=1
-                 ;;
-        '`'*'`') style=$ZSH_HIGHLIGHT_STYLES[back-quoted-argument];;
-        *"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
-        *)       if _zsh_highlight_main_highlighter_check_path; then
-                   style=$ZSH_HIGHLIGHT_STYLES[directories]
-                 elif [[ $arg[0,1] = $histchars[0,1] ]]; then
-                   style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
-                 elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
-                   style=$ZSH_HIGHLIGHT_STYLES[separators]
-                 elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
-                   style=$ZSH_HIGHLIGHT_STYLES[redirection]
-                 else
-                   style=$ZSH_HIGHLIGHT_STYLES[default]
-                 fi
-		 _zsh_highlight_main_highlighter_check_file && isfile=true
-                 ;;
-      esac
-    fi
-    # if a style_override was set (eg in _zsh_highlight_main_highlighter_check_path), use it
-    [[ -n $style_override ]] && style=$ZSH_HIGHLIGHT_STYLES[$style_override]
-    if [[ $isfile == true ]]; then
-	start_file_pos=$((start_pos+${#arg}-${#arg:t}))
-	end_file_pos=$end_pos
-	end_pos=$((end_pos-${#arg:t}))
-	region_highlight+=("$start_file_pos $end_file_pos $lsstyle")
-    fi
-    [[ $substr_color = 0 ]] && region_highlight+=("$start_pos $end_pos $style")
-    [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && new_expression=true
-    [[ $isfile == true ]] && start_pos=$end_file_pos || start_pos=$end_pos
-  done
+	   # Parse the sudo command line
+	   if $sudo; then
+	       case "$arg" in
+		   # Flag that requires an argument
+		   '-'[Cgprtu]) sudo_arg=true;;
+		   # This prevents misbehavior with sudo -u -otherargument
+		   '-'*)        sudo_arg=false;;
+		   *)           if $sudo_arg; then
+				    sudo_arg=false
+				else
+				    sudo=false
+				    new_expression=true
+				fi
+				;;
+	       esac
+	   fi
+	   if $new_expression; then
+	       new_expression=false
+	       if [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS:#"$arg"} ]]; then
+		   style=$ZSH_HIGHLIGHT_STYLES[precommand]
+	       elif [[ "$arg" = "sudo" ]]; then
+		   style=$ZSH_HIGHLIGHT_STYLES[precommand]
+		   sudo=true
+	       else
+		   res=$(LC_ALL=C builtin type -w $arg 2>/dev/null)
+		   case $res in
+		       *': reserved')  style=$ZSH_HIGHLIGHT_STYLES[reserved-words];;
+		       *': alias')     style=$ZSH_HIGHLIGHT_STYLES[aliases]
+				       local aliased_command="${"$(alias -- $arg)"#*=}"
+				       [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$aliased_command"} && -z ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS+=($arg)
+				       ;;
+		       *': builtin')   style=$ZSH_HIGHLIGHT_STYLES[builtins];;
+		       *': function')  style=$ZSH_HIGHLIGHT_STYLES[functions];;
+		       *': command')   style=$ZSH_HIGHLIGHT_STYLES[commands];;
+		       *': hashed')    style=$ZSH_HIGHLIGHT_STYLES[hashed-command];;
+		       *)              if _zsh_highlight_main_highlighter_check_assign; then
+					   style=$ZSH_HIGHLIGHT_STYLES[assign]
+					   new_expression=true
+				       elif _zsh_highlight_main_highlighter_check_command; then
+					   style=$ZSH_HIGHLIGHT_STYLES[command_prefix]
+				       elif _zsh_highlight_main_highlighter_check_path; then
+					   style=$ZSH_HIGHLIGHT_STYLES[directories]
+				       elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
+					   style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
+				       elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
+					   style=$ZSH_HIGHLIGHT_STYLES[separators]
+				       elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
+					   style=$ZSH_HIGHLIGHT_STYLES[redirection]
+				       else
+					   style=$ZSH_HIGHLIGHT_STYLES[unknown-token]
+				       fi
+				       _zsh_highlight_main_highlighter_check_file && isfile=true
+				       ;;
+		   esac
+	       fi
+	   else
+	       case $arg in
+		   '--'*|'-'*)   style=$ZSH_HIGHLIGHT_STYLES[options];;
+		   "'"*"'") style=$ZSH_HIGHLIGHT_STYLES[single-quoted-argument];;
+		   '"'*'"') style=$ZSH_HIGHLIGHT_STYLES[double-quoted-argument]
+			    region_highlight+=("$start_pos $end_pos $style")
+			    _zsh_highlight_main_highlighter_highlight_string
+			    substr_color=1
+			    ;;
+		   '$(('*'))') style=$ZSH_HIGHLIGHT_STYLES[numbers];;
+		   '$('*')') style=$ZSH_HIGHLIGHT_STYLES[command-substitution];;
+		   '`'*'`')  style=$ZSH_HIGHLIGHT_STYLES[command-substitution];;
+		   '$(<'*')') style=$ZSH_HIGHLIGHT_STYLES[command-substitution];;
+		   '<('*')') style=$ZSH_HIGHLIGHT_STYLES[process-substitution];;
+		   '>('*')') style=$ZSH_HIGHLIGHT_STYLES[process-substitution];;
+		   *"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
+		   *)       if _zsh_highlight_main_highlighter_check_path; then
+				style=$ZSH_HIGHLIGHT_STYLES[directories]
+			    elif [[ $arg[0,1] = $histchars[0,1] ]]; then
+				style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
+			    elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
+				style=$ZSH_HIGHLIGHT_STYLES[separators]
+			    elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
+				style=$ZSH_HIGHLIGHT_STYLES[redirection]
+			    else
+				style=$ZSH_HIGHLIGHT_STYLES[default]
+			    fi
+			    _zsh_highlight_main_highlighter_check_file && isfile=true
+			    ;;
+	       esac
+	   fi
+	   # if a style_override was set (eg in _zsh_highlight_main_highlighter_check_path), use it
+	   [[ -n $style_override ]] && style=$ZSH_HIGHLIGHT_STYLES[$style_override]
+	   if [[ $isfile == true ]]; then
+	       start_file_pos=$((start_pos+${#arg}-${#arg:t}))
+	       end_file_pos=$end_pos
+	       end_pos=$((end_pos-${#arg:t}))
+	       region_highlight+=("$start_file_pos $end_file_pos $lsstyle")
+	   fi
+	   [[ $substr_color = 0 ]] && region_highlight+=("$start_pos $end_pos $style")
+	   [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && new_expression=true
+	   [[ $isfile == true ]] && start_pos=$end_file_pos || start_pos=$end_pos
+    done
 }
 
 # Check if the argument is variable assignment
@@ -226,85 +231,104 @@ _zsh_highlight_main_highlighter_check_assign()
 # Check if the argument is a path.
 _zsh_highlight_main_highlighter_check_path()
 {
-  setopt localoptions nonomatch
-  local expanded_path; : ${expanded_path:=${(Q)~arg}}
-  [[ -z $expanded_path ]] && return 1
-  [[ -e $expanded_path ]] && return 0
-  # Search the path in CDPATH
-  local cdpath_dir
-  for cdpath_dir in $cdpath ; do
-    [[ -e "$cdpath_dir/$expanded_path" ]] && return 0
-  done
-  [[ ! -e ${expanded_path:h} ]] && return 1
-  if [[ ${BUFFER[1]} != "-" && ${#LBUFFER} == $end_pos ]]; then
-    local -a tmp
-    # got a path prefix?
-    tmp=( ${expanded_path}*(N) )
-    (( $#tmp > 0 )) && style_override=path_prefix && _zsh_highlight_main_highlighter_predicate_switcher bc && return 0
-  fi
-  return 1
+    setopt localoptions nonomatch
+    local expanded_path; : ${expanded_path:=${(Q)~arg}}
+    [[ -z $expanded_path ]] && return 1
+    [[ -e $expanded_path ]] && return 0
+    # Search the path in CDPATH
+    local cdpath_dir
+    for cdpath_dir in $cdpath ; do
+	[[ -e "$cdpath_dir/$expanded_path" ]] && return 0
+    done
+    [[ ! -e ${expanded_path:h} ]] && return 1
+    if [[ ${BUFFER[1]} != "-" && ${#LBUFFER} == $end_pos ]]; then
+	local -a tmp
+	# got a path prefix?
+	tmp=( ${expanded_path}*(N) )
+	(( $#tmp > 0 )) && style_override=path_prefix && _zsh_highlight_main_highlighter_predicate_switcher bc && return 0
+    fi
+    return 1
 }
 
 # Highlight special chars inside double-quoted strings
 _zsh_highlight_main_highlighter_highlight_string()
 {
-  setopt localoptions noksharrays
-  local i j k style varflag
-  # Starting quote is at 1, so start parsing at offset 2 in the string.
-  for (( i = 2 ; i < end_pos - start_pos ; i += 1 )) ; do
-    (( j = i + start_pos - 1 ))
-    (( k = j + 1 ))
-    case "$arg[$i]" in
-      '$' ) style=$ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]
-            (( varflag = 1))
-            ;;
-      "\\") style=$ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]
-            for (( c = i + 1 ; c < end_pos - start_pos ; c += 1 )); do
-              [[ "$arg[$c]" != ([0-9,xX,a-f,A-F]) ]] && break
-            done
-            AA=$arg[$i+1,$c-1]
-            # Matching for HEX and OCT values like \0xA6, \xA6 or \012
-            if [[ "$AA" =~ "^(0*(x|X)[0-9,a-f,A-F]{1,2})" || "$AA" =~ "^(0[0-7]{1,3})" ]];then
-              (( k += $#MATCH ))
-              (( i += $#MATCH ))
-            else
-              (( k += 1 )) # Color following char too.
-              (( i += 1 )) # Skip parsing the escaped char.
-            fi
-              (( varflag = 0 )) # End of variable
-            ;;
-      ([^a-zA-Z0-9_]))
-            (( varflag = 0 )) # End of variable
-            continue
-            ;;
-      *) [[ $varflag -eq 0 ]] && continue ;;
-
-    esac
-    region_highlight+=("$j $k $style")
-  done
+    setopt localoptions extendedglob noksharrays
+    local i j k style varflag st en
+    st=$((start_pos+1)); en=0
+    for x in "${(Qz)arg}"; do
+	((st+=${#BUFFER[$st+1,-1]}-${#${BUFFER[$st+1,-1]##[[:space:]]#}}))
+	en=$((st+${#x}))
+	case "$x" in
+	    '$(('*'))') style=$ZSH_HIGHLIGHT_STYLES[numbers]
+			region_highlight+=("$st $en $style")
+			;;
+	    '$('*')') style=$ZSH_HIGHLIGHT_STYLES[command-substitution]
+		      region_highlight+=("$st $en $style")
+		      ;;
+	    '$('*')') style=$ZSH_HIGHLIGHT_STYLES[parameters]
+		      region_highlight+=("$st $en $style")
+		      ;;
+	    '$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style=$ZSH_HIGHLIGHT_STYLES[parameters]
+							   region_highlight+=("$st $en $style")
+						     ;;
+	esac
+	st=$en
+    done
+    
+    # Starting quote is at 1, so start parsing at offset 2 in the string.
+#     for (( i = 2 ; i < end_pos - start_pos ; i += 1 )) ; do
+# 	(( j = i + start_pos - 1 ))
+# 	(( k = j + 1 ))
+# 	case "$arg[$i]" in
+# 	    '$') style=$ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]
+# 		  (( varflag = 1))
+#   		  ;;
+# 	    "\\") style=$ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]
+# 		  for (( c = i + 1 ; c < end_pos - start_pos ; c += 1 )); do
+# 		      [[ "$arg[$c]" != ([0-9,xX,a-f,A-F]) ]] && break
+# 		  done
+# 		  AA=$arg[$i+1,$c-1]
+# 		  # Matching for HEX and OCT values like \0xA6, \xA6 or \012
+# 		  if [[ "$AA" =~ "^(0*(x|X)[0-9,a-f,A-F]{1,2})" || "$AA" =~ "^(0[0-7]{1,3})" ]];then
+# 		      (( k += $#MATCH ))
+# 		      (( i += $#MATCH ))
+# 		  else
+# 		      (( k += 1 )) # Color following char too.
+# 		      (( i += 1 )) # Skip parsing the escaped char.
+# 		  fi
+# 		  (( varflag = 0 )) # End of variable
+# 		  ;;
+# 	    ([^a-zA-Z0-9_])) (( varflag = 0 )) # End of variable
+#                              continue
+#                              ;;
+#             *) [[ $varflag -eq 0 ]] && continue ;;
+# esac
+# region_highlight+=("$j $k $style")
+# done
 }
-
+ 
 ## Check if command with given prefix exists
 _zsh_highlight_main_highlighter_check_command()
 {
-  setopt localoptions nonomatch
-  local -a prefixed_command
-  [[ $arg != $arg:t ]] && return 1  # don't match anything if explicit path is present
-  for p in $path; do prefixed_command+=( $p/${arg}*(N) ); done
-  [[ ${BUFFER[1]} != "-" && ${#LBUFFER} == $end_pos && $#prefixed_command > 0 ]] && return 0 || return 1
+    setopt localoptions nonomatch
+    local -a prefixed_command
+    [[ $arg != $arg:t ]] && return 1  # don't match anything if explicit path is present
+    for p in $path; do prefixed_command+=( $p/${arg}*(N) ); done
+    [[ ${BUFFER[1]} != "-" && ${#LBUFFER} == $end_pos && $#prefixed_command > 0 ]] && return 0 || return 1
 }
 
 ## Fill table with colors and file types from $LS_COLORS
 _zsh_highlight_files_highlighter_fill_table_of_types()
 {
-  local group type code ncolors=$(echotc Co)
-
-  for group in ${(s.:.)LS_COLORS}; do
-    type="${group%=*}"
-    code="${group#*=}"
-    takeattrib ${(s.;.)code}
-    ZSH_HIGHLIGHT_FILES+=("$type" "$code")
-  done
+    local group type code ncolors=$(echotc Co)
+    
+    for group in ${(s.:.)LS_COLORS}; do
+	type="${group%=*}"
+	code="${group#*=}"
+	takeattrib ${(s.;.)code}
+	ZSH_HIGHLIGHT_FILES+=("$type" "$code")
+    done
 }
 
 ## Return attribute in the format compatible with zle_highlight, unfolded from color code

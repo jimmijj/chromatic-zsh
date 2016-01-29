@@ -204,12 +204,12 @@ _zsh_highlight_main_highlighter()
 		   *"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
 		   *)       if _zsh_highlight_main_highlighter_check_path; then
 				style="${__chromatic_attrib_zle[di]}"
-			    elif [[ $arg[0,1] = $histchars[0,1] ]]; then
-				style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
 			    elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
 				style="${__chromatic_attrib_zle[separators]}"
 			    elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
 				style=$ZSH_HIGHLIGHT_STYLES[redirection]
+			    elif [[ $arg[0,1] = $histchars[0,1] ]]; then
+				style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
 			    else
 				style=$ZSH_HIGHLIGHT_STYLES[default]
 			    fi

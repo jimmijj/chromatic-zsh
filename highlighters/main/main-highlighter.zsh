@@ -71,8 +71,10 @@ _zsh_highlight_main_highlighter_predicate_switcher()
 	'bc') bccounter=0 # buffer and cursor
 	      _zsh_highlight_main_highlighter_predicate()
 	      {
-		  bccounter=$((bccounter+1))
-		  (( $bccounter > 1 )) && _zsh_highlight_main_highlighter_predicate_switcher b
+		  ## In order to prevent slowdown only one invocation of this function is allowed.
+		  ## Most visible is with matching part of the file - to retain highlighting only one right/left move of the cursor is possible.
+		  ((bccounter++))
+		  (( bccounter > 1 )) && _zsh_highlight_main_highlighter_predicate_switcher b
 		  _zsh_highlight_cursor_moved || _zsh_highlight_buffer_modified
 	      };;
 	*);;
@@ -109,7 +111,7 @@ _zsh_highlight_main_highlighter()
     splitbuf2=(${(z)BUFFER//$'\n'/ \$\'\\\\n\' }) # ugly hack, but I have no other idea
     local argnum=0
     for arg in ${(z)BUFFER}; do
-	argnum=$((argnum+1))
+	((argnum++))
 	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && new_expression=true && continue
 
 	   local substr_color=0 isfile=false
@@ -144,17 +146,17 @@ _zsh_highlight_main_highlighter()
 	       else
 		   res=$(LC_ALL=C builtin type -w $arg 2>/dev/null)
 		   case $res in
-		       *': reserved')  style=$ZSH_HIGHLIGHT_STYLES[reserved-words];;
-		       *': alias')     style=$ZSH_HIGHLIGHT_STYLES[aliases]
+		       *': reserved')  style="${__chromatic_attrib_zle[reseverd-words]}";;
+		       *': alias')     style="${__chromatic_attrib_zle[aliases]}"
 				       local aliased_command="${"$(alias -- $arg)"#*=}"
 				       [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$aliased_command"} && -z ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS+=($arg)
 				       ;;
-		       *': builtin')   style=$ZSH_HIGHLIGHT_STYLES[builtins];;
-		       *': function')  style=$ZSH_HIGHLIGHT_STYLES[functions];;
+		       *': builtin')   style="${__chromatic_attrib_zle[builtins]}";;
+		       *': function')  style="${__chromatic_attrib_zle[functions]}";;
 		       *': command')   style="${__chromatic_attrib_zle[ex]}";;
 		       *': hashed')    style=$ZSH_HIGHLIGHT_STYLES[hashed-command];;
 		       *)              if _zsh_highlight_main_highlighter_check_assign; then
-					   style=$ZSH_HIGHLIGHT_STYLES[assign]
+					   style="${__chromatic_attrib_zle[parameters]}"
 					   new_expression=true
 				       elif _zsh_highlight_main_highlighter_check_command; then
 					   style=$ZSH_HIGHLIGHT_STYLES[command_prefix]
@@ -163,7 +165,7 @@ _zsh_highlight_main_highlighter()
 				       elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
 					   style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
 				       elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
-					   style=$ZSH_HIGHLIGHT_STYLES[separators]
+					   style="${__chromatic_attrib_zle[separators]}"
 				       elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
 					   style=$ZSH_HIGHLIGHT_STYLES[redirection]
 				       else
@@ -175,7 +177,7 @@ _zsh_highlight_main_highlighter()
 	       fi
 	   else
 	       case $arg in
-		   '--'*|'-'*)   style=$ZSH_HIGHLIGHT_STYLES[options];;
+		   '--'*|'-'*)   style="${__chromatic_attrib_zle[options]}";;
 		   "'"*"'") style=$ZSH_HIGHLIGHT_STYLES[single-quoted-argument];;
 		   '"'*'"') style=$ZSH_HIGHLIGHT_STYLES[double-quoted-argument]
 			    region_highlight+=("$start_pos $end_pos $style")
@@ -205,7 +207,7 @@ _zsh_highlight_main_highlighter()
 			    elif [[ $arg[0,1] = $histchars[0,1] ]]; then
 				style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
 			    elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
-				style=$ZSH_HIGHLIGHT_STYLES[separators]
+				style="${__chromatic_attrib_zle[separators]}"
 			    elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
 				style=$ZSH_HIGHLIGHT_STYLES[redirection]
 			    else
@@ -218,9 +220,9 @@ _zsh_highlight_main_highlighter()
 	   # if a style_override was set (eg in _zsh_highlight_main_highlighter_check_path), use it
 	   [[ -n $style_override ]] && style=$ZSH_HIGHLIGHT_STYLES[$style_override]
 	   if [[ $isfile == true ]]; then
-	       start_file_pos=$((start_pos+${#arg}-${#arg:t}))
+	       ((start_file_pos=start_pos+${#arg}-${#arg:t}))
 	       end_file_pos=$end_pos
-	       end_pos=$((end_pos-${#arg:t}))
+	       ((end_pos=end_pos-${#arg:t}))
 	       region_highlight+=("$start_file_pos $end_file_pos $lsstyle")
 	   fi
 	   [[ $substr_color = 0 ]] && region_highlight+=("$start_pos $end_pos $style")
@@ -262,26 +264,26 @@ _zsh_highlight_main_highlighter_check_path()
 _zsh_highlight_main_highlighter_highlight_string()
 {
     setopt localoptions extendedglob noksharrays
-    local i j k style varflag st en
-    st=$((start_pos+1)); en=0
-    for x in "${(Qz)arg}"; do
-	((st+=${#BUFFER[$st+1,-1]}-${#${BUFFER[$st+1,-1]##[[:space:]]#}}))
-	en=$((st+${#x}))
-	case "$x" in
+    local i j k style varflag str_start str_end
+    ((str_start=start_pos+1)); str_end=0
+    for substr in "${(Qz)arg}"; do
+	((str_start+=${#BUFFER[$str_start+1,-1]}-${#${BUFFER[$str_start+1,-1]##[[:space:]]#}}))
+	((str_end=str_start+${#substr}))
+	case "$substr" in
 	    '$(('*'))') style=$ZSH_HIGHLIGHT_STYLES[numbers]
-			region_highlight+=("$st $en $style")
+			region_highlight+=("$str_start $str_end $style")
 			;;
 	    '$('*')') style=$ZSH_HIGHLIGHT_STYLES[command-substitution]
-		      region_highlight+=("$st $en $style")
+		      region_highlight+=("$str_start $str_end $style")
 		      ;;
 	    '`'*'`') style=$ZSH_HIGHLIGHT_STYLES[parameters]
-		      region_highlight+=("$st $en $style")
+		      region_highlight+=("$str_start $str_end $style")
 		      ;;
 	    '$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}"
-							   region_highlight+=("$st $en $style")
+							   region_highlight+=("$str_start $str_end $style")
 						     ;;
 	esac
-	st=$en
+	str_start="$str_end"
     done
     
     # Starting quote is at 1, so start parsing at offset 2 in the string.

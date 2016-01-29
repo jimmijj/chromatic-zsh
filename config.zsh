@@ -6,7 +6,6 @@ declare -A __chromatic_attrib __chromatic_attrib_zle
 __chromatic_attrib=(
     aliases        '1;35'
     builtins       '1;33'
-    commands       '1;33'
     comments       '2;37'
     directories    '1;34'
     functions      '33'
@@ -26,7 +25,6 @@ if [[ "$ncolors" == 256 ]]; then
     __chromatic_attrib+=(
 	aliases        '38;5;128'
 	builtins       '38;5;83'
-	commands       '38;5;77'
 	comments       '38;5;244'
 	directories    '38;5;12'
 	functions      '38;5;134'

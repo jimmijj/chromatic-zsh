@@ -2,7 +2,7 @@
 
 zstyle ':completion:*' group-name ''						     
 zstyle ':completion:*:default'         list-colors ${(s.:.)LS_COLORS}
-zstyle ':completion:*:commands'        list-colors '=*='"${__chromatic_attrib[commands]}"
+zstyle ':completion:*:commands'        list-colors '=*='"${__chromatic_attrib[ex]}"
 zstyle ':completion:*:builtins'        list-colors '=*='"${__chromatic_attrib[builtins]}"
 zstyle ':completion:*:functions'       list-colors '=*='"${__chromatic_attrib[functions]}"
 zstyle ':completion:*:aliases'         list-colors '=*='"${__chromatic_attrib[aliases]}"

@@ -38,7 +38,7 @@ if [[ "$ncolors" == 256 ]]; then
 	process-names  '33'
     )
 fi
-
+__chromatic_attrib+=( ${=${(s.:.)=LS_COLORS//=/ }} )
 
 ## Return attribute in the format compatible with zle_highlight, unfolded from color code
 takeattrib()

@@ -36,7 +36,6 @@ ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 : ${ZSH_HIGHLIGHT_STYLES[precommand]:=fg=green,underline}
 : ${ZSH_HIGHLIGHT_STYLES[redirection]:=fg=magenta}
 : ${ZSH_HIGHLIGHT_STYLES[hashed-command]:=fg=green}
-: ${ZSH_HIGHLIGHT_STYLES[path_prefix]:=underline}
 : ${ZSH_HIGHLIGHT_STYLES[file]:=}
 : ${ZSH_HIGHLIGHT_STYLES[globbing]:=fg=blue}
 : ${ZSH_HIGHLIGHT_STYLES[history-expansion]:=fg=blue}
@@ -152,7 +151,7 @@ _zsh_highlight_main_highlighter()
 				       ;;
 		       *': builtin')   style=$ZSH_HIGHLIGHT_STYLES[builtins];;
 		       *': function')  style=$ZSH_HIGHLIGHT_STYLES[functions];;
-		       *': command')   style=$ZSH_HIGHLIGHT_STYLES[commands];;
+		       *': command')   style="${__chromatic_attrib_zle[ex]}";;
 		       *': hashed')    style=$ZSH_HIGHLIGHT_STYLES[hashed-command];;
 		       *)              if _zsh_highlight_main_highlighter_check_assign; then
 					   style=$ZSH_HIGHLIGHT_STYLES[assign]
@@ -160,7 +159,7 @@ _zsh_highlight_main_highlighter()
 				       elif _zsh_highlight_main_highlighter_check_command; then
 					   style=$ZSH_HIGHLIGHT_STYLES[command_prefix]
 				       elif _zsh_highlight_main_highlighter_check_path; then
-					   style=$ZSH_HIGHLIGHT_STYLES[directories]
+					   style="${__chromatic_attrib_zle[di]}"
 				       elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
 					   style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
 				       elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
@@ -183,25 +182,26 @@ _zsh_highlight_main_highlighter()
 			    _zsh_highlight_main_highlighter_highlight_string
 			    substr_color=1
 			    ;;
+#		   '$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_atrib[parameters]}");;
 		   '$(('*'))') style=$ZSH_HIGHLIGHT_STYLES[numbers];;
 		   '$('*')')
-		       region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[commands]}")
-		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[commands]}")
+		       region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle_zle[ex]}")
+		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle_zle[ex]}")
 		       substr_color=1
 		       ;;
 		   '`'*'`')
-		       region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle[commands]}")
-		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[commands]}")
+		       region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle_zle[builtins]}")
+		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle_zle[builtins]}")
 		       substr_color=1
 		       ;;
 		   '<('*')'|'>('*')'|'=('*')') 
-		       region_highlight+=("$start_pos $((start_pos+2)) ${ZSH_HIGHLIGHT_FILES[cd]}")
-		       region_highlight+=("$((end_pos-1)) $end_pos ${ZSH_HIGHLIGHT_FILES[cd]}")
+		       region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[cd]}")
+		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[cd]}")
 		       substr_color=1
 		       ;;
 		   *"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
 		   *)       if _zsh_highlight_main_highlighter_check_path; then
-				style=$ZSH_HIGHLIGHT_STYLES[directories]
+				style="${__chromatic_attrib_zle[di]}"
 			    elif [[ $arg[0,1] = $histchars[0,1] ]]; then
 				style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
 			    elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
@@ -274,10 +274,10 @@ _zsh_highlight_main_highlighter_highlight_string()
 	    '$('*')') style=$ZSH_HIGHLIGHT_STYLES[command-substitution]
 		      region_highlight+=("$st $en $style")
 		      ;;
-	    '$('*')') style=$ZSH_HIGHLIGHT_STYLES[parameters]
+	    '`'*'`') style=$ZSH_HIGHLIGHT_STYLES[parameters]
 		      region_highlight+=("$st $en $style")
 		      ;;
-	    '$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style=$ZSH_HIGHLIGHT_STYLES[parameters]
+	    '$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}"
 							   region_highlight+=("$st $en $style")
 						     ;;
 	esac
@@ -326,45 +326,6 @@ _zsh_highlight_main_highlighter_check_command()
     [[ ${BUFFER[1]} != "-" && ${#LBUFFER} == $end_pos && $#prefixed_command > 0 ]] && return 0 || return 1
 }
 
-## Fill table with colors and file types from $LS_COLORS
-_zsh_highlight_files_highlighter_fill_table_of_types()
-{
-    local group type code ncolors=$(echotc Co)
-    
-    for group in ${(s.:.)LS_COLORS}; do
-	type="${group%=*}"
-	code="${group#*=}"
-	takeattrib ${(s.;.)code}
-	ZSH_HIGHLIGHT_FILES+=("$type" "$code")
-    done
-}
-
-## Return attribute in the format compatible with zle_highlight, unfolded from color code
-takeattrib()
-{
-    local -a attrib
-    while [ "$#" -gt 0 ]; do
-	[[ "$1" == 38 && "$2" == 5 ]] && {attrib+=("fg=$3"); shift 3; continue}
-	[[ "$1" == 48 && "$2" == 5 ]] && {attrib+=("bg=$3"); shift 3; continue}
-	case $1 in
-	    00|0) attrib+=("none"); shift;;
-            01|1) attrib+=("bold" ); shift;;
-            02|2) attrib+=("faint"); shift;;
-            03|3) attrib+=("italic"); shift;;
-            04|4) attrib+=("underscore"); shift;;
-            05|5) attrib+=("blink"); shift;;
-            07|7) attrib+=("standout"); shift;;
-            08|8) attrib+=("concealed"); shift;;
-            3[0-7]) attrib+=("fg=$(($1-30))"); shift;;
-            4[0-7]) attrib+=("bg=$(($1-40))"); shift;;
-            9[0-7]) [[ "$ncolors" == 256 ]] && attrib+=("fg=$(($1-82))") || attrib+=("fg=$(($1-90))" "bold"); shift;;
-            10[0-7]) [[ "$ncolors" == 256 ]] && attrib+=("bg=$(($1-92))") || attrib+=("bg=$(($1-100))" "bold"); shift;;
-            *) shift;;
-        esac
-    done
-    code="${(j:,:)attrib}"
-}
-
 ## Check if the argument is a file, if yes change the style accordingly
 _zsh_highlight_main_highlighter_check_file()
 {
@@ -381,29 +342,26 @@ _zsh_highlight_main_highlighter_check_file()
     [[ ! -z "${ZSH_HIGHLIGHT_STYLES[file]}" ]] && lsstyle="${ZSH_HIGHLIGHT_STYLES[file]}" && return 0
 
     # [[ rs ]]
-    # [[ -d $expanded_arg || -d $matched_file ]] && lsstyle=$ZSH_HIGHLIGHT_FILES[di] && return 0
-    [[ -h "$expanded_arg" || -h "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[ln]}" && return 0
+    # [[ -d $expanded_arg || -d $matched_file ]] && lsstyle=$__chromatic_attrib_zle[di] && return 0
+    [[ -h "$expanded_arg" || -h "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[ln]}" && return 0
     # [[ mh ]]
-    [[ -p "$expanded_arg" || -p "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[pi]}" && return 0
-    [[ -S "$expanded_arg" || -S "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[so]}" && return 0
+    [[ -p "$expanded_arg" || -p "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[pi]}" && return 0
+    [[ -S "$expanded_arg" || -S "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[so]}" && return 0
     # [[ do ]]
-    [[ -b "$expanded_arg" || -b "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[bd]}" && return 0
-    [[ -c "$expanded_arg" || -c "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[cd]}" && return 0
+    [[ -b "$expanded_arg" || -b "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[bd]}" && return 0
+    [[ -c "$expanded_arg" || -c "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[cd]}" && return 0
     # [[ or ]]
     # [[ mi ]]
-    [[ -u "$expanded_arg" || -u "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[su]}" && return 0
-    [[ -g "$expanded_arg" || -g "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[sg]}" && return 0
+    [[ -u "$expanded_arg" || -u "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[su]}" && return 0
+    [[ -g "$expanded_arg" || -g "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[sg]}" && return 0
     # [[ ca ]]
     # [[ tw ]]
     # [[ ow ]]
-    [[ -k "$expanded_arg" || -k "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[st]}" && return 0
-    [[ -x "$expanded_arg" || -x "$matched_file" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[ex]}" && return 0
+    [[ -k "$expanded_arg" || -k "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[st]}" && return 0
+    [[ -x "$expanded_arg" || -x "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[ex]}" && return 0
 
-    [[ -e "$expanded_arg" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[*.$expanded_arg:e]}" && return 0
-    [[ -n "$matched_file:e" ]] && lsstyle="${ZSH_HIGHLIGHT_FILES[*.$matched_file:e]}" && return 0
+    [[ -e "$expanded_arg" ]] && lsstyle="${__chromatic_attrib_zle[*.$expanded_arg:e]}" && return 0
+    [[ -n "$matched_file:e" ]] && lsstyle="${__chromatic_attrib_zle[*.$matched_file:e]}" && return 0
 
     return 0
 }
-
-## Fill table only once, at the initialization process
-_zsh_highlight_files_highlighter_fill_table_of_types

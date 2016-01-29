@@ -201,6 +201,7 @@ _zsh_highlight_main_highlighter()
 		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[cd]}")
 		       substr_color=1
 		       ;;
+		   '|') style="${__chromatic_attrib_zle[pi]}";;
 		   *"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
 		   *)       if _zsh_highlight_main_highlighter_check_path; then
 				style="${__chromatic_attrib_zle[di]}"

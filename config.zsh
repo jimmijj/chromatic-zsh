@@ -1,8 +1,7 @@
-# Default atrributes
-
 local ncolors="$(echotc Co)"
 declare -A __chromatic_attrib __chromatic_attrib_zle
 
+# Default atrributes
 __chromatic_attrib=(
     aliases        '1;35'
     builtins       '1;33'
@@ -36,7 +35,9 @@ if [[ "$ncolors" == 256 ]]; then
 	process-names  '33'
     )
 fi
-__chromatic_attrib+=( ${=${(s.:.)=LS_COLORS//=/ }} )
+
+## Add attributes from LS_COLORS
+__chromatic_attrib+=(${=${(s.:.)=LS_COLORS//=/ }})
 
 ## Return attribute in the format compatible with zle_highlight, unfolded from color code
 takeattrib()

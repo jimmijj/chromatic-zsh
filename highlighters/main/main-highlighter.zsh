@@ -146,7 +146,7 @@ _zsh_highlight_main_highlighter()
 	       else
 		   res=$(LC_ALL=C builtin type -w $arg 2>/dev/null)
 		   case $res in
-		       *': reserved')  style="${__chromatic_attrib_zle[reseverd-words]}";;
+		       *': reserved')  style="${__chromatic_attrib_zle[reserved-words]}";;
 		       *': alias')     style="${__chromatic_attrib_zle[aliases]}"
 				       local aliased_command="${"$(alias -- $arg)"#*=}"
 				       [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$aliased_command"} && -z ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS+=($arg)
@@ -184,16 +184,16 @@ _zsh_highlight_main_highlighter()
 			    _zsh_highlight_main_highlighter_highlight_string
 			    substr_color=1
 			    ;;
-#		   '$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_atrib[parameters]}");;
+		   '$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}";;
 		   '$(('*'))') style=$ZSH_HIGHLIGHT_STYLES[numbers];;
 		   '$('*')')
-		       region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle_zle[ex]}")
-		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle_zle[ex]}")
+		       region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
+		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
 		       substr_color=1
 		       ;;
 		   '`'*'`')
-		       region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle_zle[builtins]}")
-		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle_zle[builtins]}")
+		       region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle[builtins]}")
+		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
 		       substr_color=1
 		       ;;
 		   '<('*')'|'>('*')'|'=('*')') 
@@ -270,13 +270,13 @@ _zsh_highlight_main_highlighter_highlight_string()
 	((str_start+=${#BUFFER[$str_start+1,-1]}-${#${BUFFER[$str_start+1,-1]##[[:space:]]#}}))
 	((str_end=str_start+${#substr}))
 	case "$substr" in
-	    '$(('*'))') style=$ZSH_HIGHLIGHT_STYLES[numbers]
+	    '$(('*'))') style="${__chromatic_attrib_zle[numbers]}"
 			region_highlight+=("$str_start $str_end $style")
 			;;
-	    '$('*')') style=$ZSH_HIGHLIGHT_STYLES[command-substitution]
+	    '$('*')') style="${__chromatic_attrib_zle[builtins]}"
 		      region_highlight+=("$str_start $str_end $style")
 		      ;;
-	    '`'*'`') style=$ZSH_HIGHLIGHT_STYLES[parameters]
+	    '`'*'`') style="${__chromatic_attrib_zle[builtins]}"
 		      region_highlight+=("$str_start $str_end $style")
 		      ;;
 	    '$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}"

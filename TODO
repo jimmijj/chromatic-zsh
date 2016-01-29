@@ -1,0 +1,11 @@
+- command substitution should be valid at the beginning of the line too
+- add subshell highlight
+- and brace expansion
+- add brackets to the main style without loss of the context
+- pipes '|' should be in pipes' file color
+- clean the code: get rid of unnecessary array, 
+- bug: first command in the subshell and in the list `{}` should be highlighted
+
+- nice feature: separate expansion flags from the parameter, like ${(kv)abc}
+
+- biger challange: loop over nested sub-words (double quotes, command-, process-substitution, subshells).

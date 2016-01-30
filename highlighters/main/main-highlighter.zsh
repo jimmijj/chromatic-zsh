@@ -110,7 +110,7 @@ _zsh_highlight_main_highlighter()
     splitbuf1=(${(z)BUFFER})
     splitbuf2=(${(z)BUFFER//$'\n'/ \$\'\\\\n\' }) # ugly hack, but I have no other idea
     local argnum=0
-    for arg in ${(z)BUFFER}; do
+    for arg in ${(z)${(z)BUFFER}}; do
 	((argnum++))
 	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && new_expression=true && continue
 

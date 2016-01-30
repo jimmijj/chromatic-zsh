@@ -202,6 +202,7 @@ _zsh_highlight_main_highlighter()
 		       substr_color=1
 		       ;;
 		   '('|')') style="${__chromatic_attrib_zle[functions]}";;
+		   '{'|'}') style="${__chromatic_attrib_zle[reserved-words]}";;
 		   '|') style="${__chromatic_attrib_zle[pi]}";;
 		   *"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
 		   *)       if _zsh_highlight_main_highlighter_check_path; then

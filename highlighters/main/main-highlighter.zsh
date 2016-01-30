@@ -177,8 +177,8 @@ _zsh_highlight_main_highlighter()
 	       fi
 	   else
 	       case $arg in
-		   '--'*|'-'*)   style="${__chromatic_attrib_zle[options]}";;
-		   "'"*"'") style=$ZSH_HIGHLIGHT_STYLES[single-quoted-argument];;
+		   '--'*|'-'*) style="${__chromatic_attrib_zle[options]}";;
+		   "'"*"'") style="${__chromatic_attrib_zle[comments]}";;
 		   '"'*'"') style=$ZSH_HIGHLIGHT_STYLES[double-quoted-argument]
 			    region_highlight+=("$start_pos $end_pos $style")
 			    _zsh_highlight_main_highlighter_highlight_string

@@ -162,7 +162,15 @@ _zsh_highlight_main_highlighter()
 					   style=$ZSH_HIGHLIGHT_STYLES[command_prefix]
 				       elif _zsh_highlight_main_highlighter_check_path; then
 					   style="${__chromatic_attrib_zle[di]}"
-				       elif _is_arithmetic_evaluation; then
+				       elif case "$arg" in '$('*')') : ;; *) ! :; esac; then
+					   region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
+					   region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
+					   substr_color=1
+				       elif case "$arg" in '`'*'`') : ;; *) ! :; esac; then
+					   region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle[builtins]}")
+					   region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
+					   substr_color=1
+				       elif case "$arg" in '(('*'))') : ;; *) ! :; esac; then
 					   style="${__chromatic_attrib_zle[numbers]}"
 				       elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
 					   style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
@@ -241,15 +249,6 @@ _zsh_highlight_main_highlighter_check_assign()
 {
     setopt localoptions extended_glob
     [[ $arg == [[:alpha:]_][[:alnum:]_]#(|\[*\])=* ]]
-}
-
-## Check if the argument is variable assignment
-_is_arithmetic_evaluation()
-{
-    case $arg in
-	'(('*'))') return 0;;
-	*) return 1
-    esac
 }
 
 # Check if the argument is a path.

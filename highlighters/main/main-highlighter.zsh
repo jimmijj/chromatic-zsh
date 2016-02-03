@@ -72,7 +72,7 @@ _zsh_highlight_main_highlighter_predicate_switcher()
 	      _zsh_highlight_main_highlighter_predicate()
 	      {
 		  ## In order to prevent slowdown only one invocation of this function is allowed.
-		  ## Most visible is with matching part of the file - to retain highlighting only one right/left move of the cursor is possible.
+		  ## Most visible reason is with matching part of the file - to retain highlighting only one right/left move of the cursor is possible.
 		  ((bccounter++))
 		  (( bccounter > 1 )) && _zsh_highlight_main_highlighter_predicate_switcher b
 		  _zsh_highlight_cursor_moved || _zsh_highlight_buffer_modified
@@ -172,6 +172,8 @@ _zsh_highlight_main_highlighter()
 					   substr_color=1
 				       elif case "$arg" in '(('*'))') : ;; *) ! :; esac; then
 					   style="${__chromatic_attrib_zle[numbers]}"
+				       elif case "$arg" in '('|')') : ;; *) ! :; esac; then
+					   style="${__chromatic_attrib_zle[functions]}"
 				       elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
 					   style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
 				       elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then

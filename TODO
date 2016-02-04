@@ -2,7 +2,7 @@
 - add 'in' and ']]' to the reserved words set of colors
 - add brackets to the main style without loss of the context
 - clean the code: get rid of unnecessary array, 
-
+- remove precommand style
 
 - nice feature: separate expansion flags from the parameter, like ${(kv)abc}
 

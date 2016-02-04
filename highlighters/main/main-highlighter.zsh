@@ -144,6 +144,7 @@ _zsh_highlight_main_highlighter()
 		   style=$ZSH_HIGHLIGHT_STYLES[precommand]
 		   sudo=true
 	       else
+		   _check_common_expression "$arg"
 		   res=$(LC_ALL=C builtin type -w $arg 2>/dev/null)
 		   case $res in
 		       *': reserved')  style="${__chromatic_attrib_zle[reserved-words]}";;
@@ -188,48 +189,17 @@ _zsh_highlight_main_highlighter()
 		   esac
 	       fi
 	   else
+	       _check_common_expression "$arg"
 	       case $arg in
 		   '--'*|'-'*) style="${__chromatic_attrib_zle[options]}";;
-		   "'"*"'") style="${__chromatic_attrib_zle[comments]}";;
-		   '"'*'"') style=$ZSH_HIGHLIGHT_STYLES[double-quoted-argument]
-			    region_highlight+=("$start_pos $end_pos $style")
-			    _zsh_highlight_main_highlighter_highlight_string
-			    substr_color=1
-			    ;;
-		   '$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}";;
-		   '$(('*'))') style="${__chromatic_attrib_zle[numbers]}";;
-		   '$('*')')
-		       region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
-		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
-		       substr_color=1
-		       ;;
-		   '`'*'`')
-		       region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle[builtins]}")
-		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
-		       substr_color=1
-		       ;;
 		   '<('*')'|'>('*')'|'=('*')') 
 		       region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[cd]}")
 		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[cd]}")
 		       substr_color=1
 		       ;;
-		   '('|')') style="${__chromatic_attrib_zle[functions]}";;
-		   '{'|'}') style="${__chromatic_attrib_zle[reserved-words]}";;
 		   '|') style="${__chromatic_attrib_zle[pi]}";;
 		   *"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
-		   *)       if _zsh_highlight_main_highlighter_check_path; then
-				style="${__chromatic_attrib_zle[di]}"
-			    elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
-				style="${__chromatic_attrib_zle[separators]}"
-			    elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
-				style=$ZSH_HIGHLIGHT_STYLES[redirection]
-			    elif [[ $arg[0,1] = $histchars[0,1] ]]; then
-				style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
-			    else
-				style=$ZSH_HIGHLIGHT_STYLES[default]
-			    fi
-			    _zsh_highlight_main_highlighter_check_file && isfile=true
-			    ;;
+		   *) ;;
 	       esac
 	   fi
 	   # if a style_override was set (eg in _zsh_highlight_main_highlighter_check_path), use it
@@ -244,6 +214,46 @@ _zsh_highlight_main_highlighter()
 	   [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && new_expression=true
 	   [[ $isfile == true ]] && start_pos=$end_file_pos || start_pos=$end_pos
     done
+}
+
+## common
+_check_common_expression()
+{
+    case "$1" in
+	"'"*"'") style="${__chromatic_attrib_zle[comments]}";;
+	'"'*'"') style=$ZSH_HIGHLIGHT_STYLES[double-quoted-argument]
+		 region_highlight+=("$start_pos $end_pos $style")
+		 _zsh_highlight_main_highlighter_highlight_string
+		 substr_color=1
+		 ;;
+	'$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}";;
+	'$(('*'))') style="${__chromatic_attrib_zle[numbers]}";;
+	'$('*')')
+	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
+	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
+	    substr_color=1
+	    ;;
+	'`'*'`')
+	    region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle[builtins]}")
+	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
+	    substr_color=1
+	    ;;
+	'('|')') style="${__chromatic_attrib_zle[functions]}";;
+	'{'|'}') style="${__chromatic_attrib_zle[reserved-words]}";;
+	*)       if _zsh_highlight_main_highlighter_check_path; then
+		     style="${__chromatic_attrib_zle[di]}"
+		 elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$1"} ]]; then
+		     style="${__chromatic_attrib_zle[separators]}"
+		 elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$1"} ]]; then
+		     style=$ZSH_HIGHLIGHT_STYLES[redirection]
+		 elif [[ $1[0,1] = $histchars[0,1] ]]; then
+		     style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
+		 else
+		     style=$ZSH_HIGHLIGHT_STYLES[default]
+		 fi
+		 _zsh_highlight_main_highlighter_check_file && isfile=true
+		 ;;
+    esac
 }
 
 # Check if the argument is variable assignment

@@ -163,18 +163,6 @@ _zsh_highlight_main_highlighter()
 					   style=$ZSH_HIGHLIGHT_STYLES[command_prefix]
 				       elif _zsh_highlight_main_highlighter_check_path; then
 					   style="${__chromatic_attrib_zle[di]}"
-				       elif case "$arg" in '$('*')') : ;; *) ! :; esac; then
-					   region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
-					   region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
-					   substr_color=1
-				       elif case "$arg" in '`'*'`') : ;; *) ! :; esac; then
-					   region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle[builtins]}")
-					   region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
-					   substr_color=1
-				       elif case "$arg" in '(('*'))') : ;; *) ! :; esac; then
-					   style="${__chromatic_attrib_zle[numbers]}"
-				       elif case "$arg" in '('|')') : ;; *) ! :; esac; then
-					   style="${__chromatic_attrib_zle[functions]}"
 				       elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
 					   style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
 				       elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
@@ -238,6 +226,7 @@ _check_common_expression()
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
 	    substr_color=1
 	    ;;
+	'(('*'))') style="${__chromatic_attrib_zle[numbers]}";;
 	'('|')') style="${__chromatic_attrib_zle[functions]}";;
 	'{'|'}') style="${__chromatic_attrib_zle[reserved-words]}";;
 	*)       if _zsh_highlight_main_highlighter_check_path; then

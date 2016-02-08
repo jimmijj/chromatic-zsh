@@ -38,8 +38,6 @@ ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 : ${ZSH_HIGHLIGHT_STYLES[file]:=}
 : ${ZSH_HIGHLIGHT_STYLES[globbing]:=fg=blue}
 : ${ZSH_HIGHLIGHT_STYLES[history-expansion]:=fg=blue}
-: ${ZSH_HIGHLIGHT_STYLES[single-quoted-argument]:=fg=yellow}
-: ${ZSH_HIGHLIGHT_STYLES[double-quoted-argument]:=fg=yellow}
 : ${ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]:=fg=cyan}
 : ${ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]:=fg=cyan}
 : ${ZSH_HIGHLIGHT_STYLES[assign]:=none}
@@ -153,7 +151,7 @@ _zsh_highlight_main_highlighter()
 				       ;;
 		       *': builtin')   style="${__chromatic_attrib_zle[builtins]}";;
 		       *': function')  style="${__chromatic_attrib_zle[functions]}";;
-		       *': command')   style="${__chromatic_attrib_zle[ex]}";;
+		       *': command'|*': hashed') style="${__chromatic_attrib_zle[ex]}";;
 		       *)              if _zsh_highlight_main_highlighter_check_assign; then
 					   style="${__chromatic_attrib_zle[parameters]}"
 					   new_expression=true
@@ -206,7 +204,7 @@ _check_common_expression()
 {
     case "$1" in
 	"'"*"'") style="${__chromatic_attrib_zle[comments]}";;
-	'"'*'"') style=$ZSH_HIGHLIGHT_STYLES[double-quoted-argument]
+	'"'*'"') style="${__chromatic_attrib_zle[comments]}"
 		 region_highlight+=("$start_pos $end_pos $style")
 		 _zsh_highlight_main_highlighter_highlight_string
 		 substr_color=1

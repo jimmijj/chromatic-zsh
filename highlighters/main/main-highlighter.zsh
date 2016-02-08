@@ -35,7 +35,6 @@ ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 : ${ZSH_HIGHLIGHT_STYLES[command_prefix]:=fg=green}
 : ${ZSH_HIGHLIGHT_STYLES[precommand]:=fg=green,underline}
 : ${ZSH_HIGHLIGHT_STYLES[redirection]:=fg=magenta}
-: ${ZSH_HIGHLIGHT_STYLES[hashed-command]:=fg=green}
 : ${ZSH_HIGHLIGHT_STYLES[file]:=}
 : ${ZSH_HIGHLIGHT_STYLES[globbing]:=fg=blue}
 : ${ZSH_HIGHLIGHT_STYLES[history-expansion]:=fg=blue}
@@ -155,7 +154,6 @@ _zsh_highlight_main_highlighter()
 		       *': builtin')   style="${__chromatic_attrib_zle[builtins]}";;
 		       *': function')  style="${__chromatic_attrib_zle[functions]}";;
 		       *': command')   style="${__chromatic_attrib_zle[ex]}";;
-		       *': hashed')    style=$ZSH_HIGHLIGHT_STYLES[hashed-command];;
 		       *)              if _zsh_highlight_main_highlighter_check_assign; then
 					   style="${__chromatic_attrib_zle[parameters]}"
 					   new_expression=true

@@ -40,7 +40,6 @@ ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 : ${ZSH_HIGHLIGHT_STYLES[history-expansion]:=fg=blue}
 : ${ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]:=fg=cyan}
 : ${ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]:=fg=cyan}
-: ${ZSH_HIGHLIGHT_STYLES[assign]:=none}
 : ${ZSH_HIGHLIGHT_STYLES[region]:=bg=blue}
 : ${ZSH_HIGHLIGHT_STYLES[special]:=none}
 : ${ZSH_HIGHLIGHT_STYLES[suffix]:=none}
@@ -181,7 +180,6 @@ _zsh_highlight_main_highlighter()
 		       substr_color=1
 		       ;;
 		   '|'|'|&') style="${__chromatic_attrib_zle[pi]}";;
-		   *"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
 		   *) ;;
 	       esac
 	   fi
@@ -224,10 +222,10 @@ _check_common_expression()
 	'(('*'))') style="${__chromatic_attrib_zle[numbers]}";;
 	'('|')') style="${__chromatic_attrib_zle[functions]}";;
 	'{'|'}') style="${__chromatic_attrib_zle[reserved-words]}";;
+	*"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
+	';') style="${__chromatic_attrib_zle[separators]}";;
 	*)       if _zsh_highlight_main_highlighter_check_path; then
 		     style="${__chromatic_attrib_zle[di]}"
-		 elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$1"} ]]; then
-		     style="${__chromatic_attrib_zle[separators]}"
 		 elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$1"} ]]; then
 		     style=$ZSH_HIGHLIGHT_STYLES[redirection]
 		 elif [[ $1[0,1] = $histchars[0,1] ]]; then

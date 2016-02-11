@@ -33,7 +33,6 @@ ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 : ${ZSH_HIGHLIGHT_STYLES[default]:=none}
 : ${ZSH_HIGHLIGHT_STYLES[unknown-token]:=fg=red,bold}
 : ${ZSH_HIGHLIGHT_STYLES[command_prefix]:=fg=green}
-: ${ZSH_HIGHLIGHT_STYLES[precommand]:=fg=green,underline}
 : ${ZSH_HIGHLIGHT_STYLES[redirection]:=fg=magenta}
 : ${ZSH_HIGHLIGHT_STYLES[file]:=}
 : ${ZSH_HIGHLIGHT_STYLES[globbing]:=fg=blue}
@@ -134,10 +133,7 @@ _zsh_highlight_main_highlighter()
 	   fi
 	   if $new_expression; then
 	       new_expression=false
-	       if [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS:#"$arg"} ]]; then
-		   style=$ZSH_HIGHLIGHT_STYLES[precommand]
-	       elif [[ "$arg" = "sudo" ]]; then
-		   style=$ZSH_HIGHLIGHT_STYLES[precommand]
+	       if [[ "$arg" = "sudo" ]]; then
 		   sudo=true
 	       else
 		   _check_common_expression "$arg"

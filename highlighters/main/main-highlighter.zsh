@@ -95,7 +95,7 @@ _zsh_highlight_main_highlighter()
 	'<' '<>' '>' '>|' '>!' '>>' '>>|' '>>!' '<<' '<<-' '<<<' '<&' '>&' '<& -' '>& -' '<& p' '>& p' '&>' '>&|' '>&!' '&>|' '&>!' '>>&' '&>>' '>>&|' '>>&!' '&>>|' '&>>!'
     )
     ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS=(
-	'builtin' 'command' 'exec' 'functions' 'nocorrect' 'noglob' 'type' 'unalias' 'unhash' 'whence' 'where' 'which'
+	'builtin' 'command' 'exec' 'functions' 'nocorrect' 'noglob' 'type' 'unalias' 'unhash' 'whence' 'where' 'which' 'do'
     )
     # Tokens that are always immediately followed by a command.
     ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS=(

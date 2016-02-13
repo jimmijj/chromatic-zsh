@@ -156,8 +156,6 @@ _zsh_highlight_main_highlighter()
 					   style="${__chromatic_attrib_zle[di]}"
 				       elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
 					   style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
-				       elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR:#"$arg"} ]]; then
-					   style="${__chromatic_attrib_zle[separators]}"
 				       elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
 					   style=$ZSH_HIGHLIGHT_STYLES[redirection]
 				       else
@@ -176,6 +174,7 @@ _zsh_highlight_main_highlighter()
 		       substr_color=1
 		       ;;
 		   '|'|'|&') style="${__chromatic_attrib_zle[pi]}";;
+		   '||'|'&&'|'&'|'&|'|'&!'|';;') style="${__chromatic_attrib_zle[separators]}";;
 		   *) ;;
 	       esac
 	   fi

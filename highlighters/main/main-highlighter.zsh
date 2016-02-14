@@ -158,25 +158,14 @@ _zsh_highlight_main_highlighter()
 					   style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
 				       elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
 					   style=$ZSH_HIGHLIGHT_STYLES[redirection]
-				       else
-					   style=$ZSH_HIGHLIGHT_STYLES[unknown-token]
+				       # else
+				       # 	   style=$ZSH_HIGHLIGHT_STYLES[unknown-token]
 				       fi
 				       ;;
 		   esac
 	       fi
 	   else
-	       _check_common_expression "$arg"
-	       case $arg in
-		   '--'*|'-'*) style="${__chromatic_attrib_zle[options]}";;
-		   '<('*')'|'>('*')'|'=('*')') 
-		       region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[cd]}")
-		       region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[cd]}")
-		       substr_color=1
-		       ;;
-		   '|'|'|&') style="${__chromatic_attrib_zle[pi]}";;
-		   '||'|'&&'|'&'|'&|'|'&!'|';;') style="${__chromatic_attrib_zle[separators]}";;
-		   *) ;;
-	       esac
+	       _check_common_expression "$arg" || _check_subsequent_expression "$arg" || style=$ZSH_HIGHLIGHT_STYLES[default];
 	   fi
 	   # if a style_override was set (eg in _zsh_highlight_main_highlighter_check_path), use it
 	   [[ -n $style_override ]] && style=$ZSH_HIGHLIGHT_STYLES[$style_override]
@@ -203,7 +192,6 @@ _check_common_expression()
 		 substr_color=1
 		 ;;
 	'$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}";;
-	'$(('*'))') style="${__chromatic_attrib_zle[numbers]}";;
 	'$('*')')
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
@@ -214,8 +202,6 @@ _check_common_expression()
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
 	    substr_color=1
 	    ;;
-	'(('*'))') style="${__chromatic_attrib_zle[numbers]}";;
-	'('|')') style="${__chromatic_attrib_zle[functions]}";;
 	'{'|'}') style="${__chromatic_attrib_zle[reserved-words]}";;
 	*"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
 	';') style="${__chromatic_attrib_zle[separators]}";;
@@ -230,6 +216,27 @@ _check_common_expression()
 		 fi
 		 _zsh_highlight_main_highlighter_check_file && isfile=true
 		 ;;
+    esac
+}
+_check_leading_expression()
+{
+    case "$1" in
+	'(('*'))') style="${__chromatic_attrib_zle[numbers]}";;
+	'('|')') style="${__chromatic_attrib_zle[functions]}";;
+    esac
+}
+_check_subsequent_expression()
+{
+    case "$1" in
+	'--'*|'-'*) style="${__chromatic_attrib_zle[options]}";;
+	'|'|'|&') style="${__chromatic_attrib_zle[pi]}";;
+	'||'|'&&'|'&'|'&|'|'&!'|';;') style="${__chromatic_attrib_zle[separators]}";;
+	'$(('*'))') style="${__chromatic_attrib_zle[numbers]}";;
+	'<('*')'|'>('*')'|'=('*')')
+	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[cd]}")
+	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[cd]}")
+	    substr_color=1
+	    ;;
     esac
 }
 

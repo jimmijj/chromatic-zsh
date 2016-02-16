@@ -136,7 +136,7 @@ _zsh_highlight_main_highlighter()
 	       if [[ "$arg" = "sudo" ]]; then
 		   sudo=true
 	       else
-		   _check_leading_expression "$arg" || _check_common_expression "$arg"
+		   _check_common_expression "$arg" || _check_leading_expression "$arg"
 	       fi
 	   else
 	       _check_common_expression "$arg" || _check_subsequent_expression "$arg" || style=$ZSH_HIGHLIGHT_STYLES[default];

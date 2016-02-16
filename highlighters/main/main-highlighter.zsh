@@ -136,7 +136,7 @@ _zsh_highlight_main_highlighter()
 	       if [[ "$arg" = "sudo" ]]; then
 		   sudo=true
 	       else
-		   _check_common_expression "$arg"
+		   _check_leading_expression "$arg" || _check_common_expression "$arg"
 		   res=$(LC_ALL=C builtin type -w $arg 2>/dev/null)
 		   case $res in
 		       *': reserved')  style="${__chromatic_attrib_zle[reserved-words]}";;
@@ -203,19 +203,19 @@ _check_common_expression()
 	    substr_color=1
 	    ;;
 	'{'|'}') style="${__chromatic_attrib_zle[reserved-words]}";;
-	*"*"*)   $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
+	*"*"*) $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
 	';') style="${__chromatic_attrib_zle[separators]}";;
-	*)       if _zsh_highlight_main_highlighter_check_path; then
-		     style="${__chromatic_attrib_zle[di]}"
-		 elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$1"} ]]; then
-		     style=$ZSH_HIGHLIGHT_STYLES[redirection]
-		 elif [[ $1[0,1] = $histchars[0,1] ]]; then
-		     style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
-		 else
-		     style=$ZSH_HIGHLIGHT_STYLES[default]
-		 fi
-		 _zsh_highlight_main_highlighter_check_file && isfile=true
-		 ;;
+	*) if _zsh_highlight_main_highlighter_check_path; then
+	       style="${__chromatic_attrib_zle[di]}"
+	   elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$1"} ]]; then
+	       style=$ZSH_HIGHLIGHT_STYLES[redirection]
+	   elif [[ $1[0,1] = $histchars[0,1] ]]; then
+	       style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
+	   else
+	       style=$ZSH_HIGHLIGHT_STYLES[default]
+	   fi
+	   _zsh_highlight_main_highlighter_check_file && isfile=true
+	   ;;
     esac
 }
 _check_leading_expression()

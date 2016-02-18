@@ -166,6 +166,7 @@ _check_common_expression()
 		 substr_color=1
 		 ;;
 	'$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}";;
+	')') style="${__chromatic_attrib_zle[functions]}";;
 	'$('*')')
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
@@ -211,8 +212,6 @@ _check_leading_expression()
 		style=$ZSH_HIGHLIGHT_STYLES[command_prefix]
 	    elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
 		style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
-	    elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
-		style=$ZSH_HIGHLIGHT_STYLES[redirection]
 	    else
 	    case "$1" in
 		'(('*'))') style="${__chromatic_attrib_zle[numbers]}";;

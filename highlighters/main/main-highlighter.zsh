@@ -194,37 +194,33 @@ _check_common_expression()
 }
 _check_leading_expression()
 {
-    case "$1" in
-	'(('*'))') style="${__chromatic_attrib_zle[numbers]}";;
-	'('|')') style="${__chromatic_attrib_zle[functions]}";;
-    esac
-    res=$(LC_ALL=C builtin type -w $arg 2>/dev/null)
+    res=$(LC_ALL=C builtin type -w "$1" 2>/dev/null)
     case $res in
-	*': reserved')  style="${__chromatic_attrib_zle[reserved-words]}"
-			return 0;;
+	*': reserved')  style="${__chromatic_attrib_zle[reserved-words]}";;
 	*': alias')     style="${__chromatic_attrib_zle[aliases]}"
 			local aliased_command="${"$(alias -- $arg)"#*=}"
-			[[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$aliased_command"} && -z ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS+=($arg)
-			return 0;;
-	*': builtin')   style="${__chromatic_attrib_zle[builtins]}"
-			return 0;;
-	*': function')  style="${__chromatic_attrib_zle[functions]}"
-			return 0;;
-	*': command'|*': hashed') style="${__chromatic_attrib_zle[ex]}"
-			return 0;;
-	*)              if _zsh_highlight_main_highlighter_check_assign; then
-			    style="${__chromatic_attrib_zle[parameters]}"
-			    new_expression=true
-			elif _zsh_highlight_main_highlighter_check_command; then
-			    style=$ZSH_HIGHLIGHT_STYLES[command_prefix]
-			elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
-			    style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
-			elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
-			    style=$ZSH_HIGHLIGHT_STYLES[redirection]
-			else
-			    style=$ZSH_HIGHLIGHT_STYLES[unknown-token]
-			fi
-			;;
+			[[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$aliased_command"} && -z ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS+=($arg);;
+	*': builtin')   style="${__chromatic_attrib_zle[builtins]}";;
+	*': function')  style="${__chromatic_attrib_zle[functions]}";;
+	*': command'|*': hashed') style="${__chromatic_attrib_zle[ex]}";;
+	*)
+            if _zsh_highlight_main_highlighter_check_assign; then
+		style="${__chromatic_attrib_zle[parameters]}"
+		new_expression=true
+	    elif _zsh_highlight_main_highlighter_check_command; then
+		style=$ZSH_HIGHLIGHT_STYLES[command_prefix]
+	    elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
+		style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
+	    elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
+		style=$ZSH_HIGHLIGHT_STYLES[redirection]
+	    else
+	    case "$1" in
+		'(('*'))') style="${__chromatic_attrib_zle[numbers]}";;
+		'('|')') style="${__chromatic_attrib_zle[functions]}";;
+		*) style=$ZSH_HIGHLIGHT_STYLES[unknown-token];;
+	    esac
+	    fi
+	    ;;
     esac
 }
 _check_subsequent_expression()

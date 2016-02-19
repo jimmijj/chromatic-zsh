@@ -1,16 +1,21 @@
 chromatic-zsh
 ======================================================================
-The aim of this project is to provide unified colorful [zsh](http://www.zsh.org) environment.
+This project started from the zsh-syntax-highlighting, redesigned it completely added many new features and lifted up to the next level.
+
+   ![](misc/sample.gif)
+
+The aim of this project now is to provide unified colorful [zsh](http://www.zsh.org) environment.
 
 That includes:
  - completion system
    * commands, functions, aliases, etc.
    * possible commands arguments or options (like directory stack for `cd` or process ids for `kill`)
  - syntax
+   * including blocks of complex commands
    * including files according to their attributes
  - searched patterns in history
  - selected regions
- - default color of some commands output (like `less` or `grep`)
+ - default color scheme for some commands output (like `less` or `grep`)
 
 All colors are coherent among different context, so that i.e. file.txt is presented always in the color regardless whether its the output of `ls file.txt`, suggestion from completion system or written by hand directly on the command line (see below for examples).
 
@@ -29,6 +34,15 @@ Installation procedure
         echo '. /path/to/chromatic-zsh/chromatic-zsh.zsh' >>~/.zshrc
 
  - Start new session with `zsh`.
+
+
+Some features for completion system works only if it is enable. Thus, although not strictly neccessary, I recommend to add also to ~/.zshrc:
+
+    autoload -U compinit && compinit
+    zstyle ':completion:*' verbose yes
+    zstyle ':completion:*' group-name ''
+    zstyle ':completion:*' menu select
+
 
 Examples
 ----------------------------------------------------------------------
@@ -75,10 +89,3 @@ Examples
   ![](misc/search.png)
 
   ![](misc/grep.png)
-
-
-
-
-----
-
-The part of the program uses zsh-syntax-highlighting.

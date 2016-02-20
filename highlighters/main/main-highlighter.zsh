@@ -178,6 +178,7 @@ _check_common_expression()
 	    substr_color=1
 	    ;;
 	'{'|'}') style="${__chromatic_attrib_zle[reserved-words]}";;
+	?'..'?|[0-9]'..'[0-9]'..'[0-9]) style="${__chromatic_attrib_zle[numbers]}";;
 	*'*'*) $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
 	';') style="${__chromatic_attrib_zle[separators]}";;
 	*) if _zsh_highlight_main_highlighter_check_path; then

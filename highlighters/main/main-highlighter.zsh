@@ -81,7 +81,7 @@ _zsh_highlight_main_highlighter()
 {
     emulate -L zsh
     setopt localoptions extendedglob bareglobqual
-    local start_pos=0 end_pos highlight_glob=true new_expression=true arg style lsstyle start_file_pos end_file_pos sudo=false sudo_arg=false
+    local start_pos=0 end_pos highlight_glob=true new_expression=true arg style lsstyle start_file_pos end_file_pos sudo=false sudo_arg=false isbrace=0
     typeset -a ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR
     typeset -a ZSH_HIGHLIGHT_TOKENS_REDIRECTION
     typeset -a ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
@@ -141,6 +141,8 @@ _zsh_highlight_main_highlighter()
 	   else
 	       _check_common_expression "$arg" || _check_subsequent_expression "$arg" || style=$ZSH_HIGHLIGHT_STYLES[default];
 	   fi
+
+	   ((isbrace==1&&isbrace++||(isbrace=0)))
 	   # if a style_override was set (eg in _zsh_highlight_main_highlighter_check_path), use it
 	   [[ -n $style_override ]] && style=$ZSH_HIGHLIGHT_STYLES[$style_override]
 	   if [[ $isfile == true ]]; then
@@ -177,8 +179,9 @@ _check_common_expression()
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
 	    substr_color=1
 	    ;;
-	'{'|'}') style="${__chromatic_attrib_zle[reserved-words]}";;
-	?'..'?|[0-9]'..'[0-9]'..'[0-9]) style="${__chromatic_attrib_zle[numbers]}";;
+	'{') isbrace=1; style="${__chromatic_attrib_zle[reserved-words]}";;
+	'}') style="${__chromatic_attrib_zle[reserved-words]}";;
+	?'..'?|[0-9]'..'[0-9]'..'[0-9]) ((isbrace==2)) && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
 	*'*'*) $highlight_glob && style=$ZSH_HIGHLIGHT_STYLES[globbing] || style=$ZSH_HIGHLIGHT_STYLES[default];;
 	';') style="${__chromatic_attrib_zle[separators]}";;
 	*) if _zsh_highlight_main_highlighter_check_path; then

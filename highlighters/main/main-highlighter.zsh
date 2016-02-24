@@ -345,7 +345,7 @@ _zsh_highlight_main_highlighter_check_file()
     setopt localoptions nonomatch
     local expanded_arg matched_file
 
-    expanded_arg="${(Q)~arg}"
+    expanded_arg=${(Q)~arg}
     [[ -z "$expanded_arg" ]] && return 1
     [[ -d "$expanded_arg" ]] && return 1
     [[ "${BUFFER[1]}" != "-" && "${#LBUFFER}" == "$end_pos" ]] && matched_file=("${expanded_arg}"*(Noa^/[1]))

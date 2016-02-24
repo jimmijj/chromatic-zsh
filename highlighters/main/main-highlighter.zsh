@@ -168,6 +168,7 @@ _check_common_expression()
 		 substr_color=1
 		 ;;
 	'$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}";;
+	'('|')') _zsh_highlight_brackets_highlighter;|
 	')') style="${__chromatic_attrib_zle[functions]}";;
 	'$('*')')
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
@@ -376,4 +377,79 @@ _zsh_highlight_main_highlighter_check_file()
     [[ -n "$matched_file:e" ]] && lsstyle="${__chromatic_attrib_zle[*.$matched_file:e]}" && return 0
 
     return 0
+}
+# Define default styles.
+: ${ZSH_HIGHLIGHT_STYLES[bracket-error]:=fg=red,bold}
+: ${ZSH_HIGHLIGHT_STYLES[bracket-level-1]:=fg=blue,bold}
+: ${ZSH_HIGHLIGHT_STYLES[bracket-level-2]:=fg=green,bold}
+: ${ZSH_HIGHLIGHT_STYLES[bracket-level-3]:=fg=magenta,bold}
+: ${ZSH_HIGHLIGHT_STYLES[bracket-level-4]:=fg=yellow,bold}
+: ${ZSH_HIGHLIGHT_STYLES[bracket-level-5]:=fg=cyan,bold}
+: ${ZSH_HIGHLIGHT_STYLES[cursor-matchingbracket]:=standout}
+
+
+
+# Brackets highlighting function.
+_zsh_highlight_brackets_highlighter()
+{
+  local level=0 pos
+  local -A levelpos lastoflevel matching typepos
+
+  # Find all brackets and remember which one is matching
+  for (( pos = 0; $pos < ${#BUFFER}; pos++ )) ; do
+    local char="$BUFFER[pos+1]"
+    case $char in
+      ["([{"])
+        levelpos[$pos]=$((++level))
+        lastoflevel[$level]=$pos
+        _zsh_highlight_brackets_highlighter_brackettype "$char"
+        ;;
+      [")]}"])
+        matching[$lastoflevel[$level]]=$pos
+        matching[$pos]=$lastoflevel[$level]
+        levelpos[$pos]=$((level--))
+        _zsh_highlight_brackets_highlighter_brackettype "$char"
+        ;;
+      ['"'\'])
+        # Skip everything inside quotes
+        local quotetype=$char
+        while (( $pos < ${#BUFFER} )) ; do
+          (( pos++ ))
+          [[ $BUFFER[$pos+1] == $quotetype ]] && break
+        done
+        ;;
+    esac
+  done
+
+  # Now highlight all found brackets
+  for pos in ${(k)levelpos}; do
+    if [[ -n $matching[$pos] ]] && [[ $typepos[$pos] == $typepos[$matching[$pos]] ]]; then
+      local bracket_color_size=${#ZSH_HIGHLIGHT_STYLES[(I)bracket-level-*]}
+      local bracket_color_level=bracket-level-$(( (levelpos[$pos] - 1) % bracket_color_size + 1 ))
+      local style=$ZSH_HIGHLIGHT_STYLES[$bracket_color_level]
+      region_highlight+=("$pos $((pos + 1)) $style")
+    else
+      local style=$ZSH_HIGHLIGHT_STYLES[bracket-error]
+      region_highlight+=("$pos $((pos + 1)) $style")
+    fi
+  done
+
+  # If cursor is on a bracket, then highlight corresponding bracket, if any
+  pos=$CURSOR
+  if [[ -n $levelpos[$pos] ]] && [[ -n $matching[$pos] ]]; then
+    local otherpos=$matching[$pos]
+    local style=$ZSH_HIGHLIGHT_STYLES[cursor-matchingbracket]
+    region_highlight+=("$otherpos $((otherpos + 1)) $style")
+  fi
+}
+
+# Helper function to differentiate type 
+_zsh_highlight_brackets_highlighter_brackettype()
+{
+  case $1 in
+    ["()"]) typepos[$pos]=round;;
+    ["[]"]) typepos[$pos]=bracket;;
+    ["{}"]) typepos[$pos]=curly;;
+    *) ;;
+  esac
 }

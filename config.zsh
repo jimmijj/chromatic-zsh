@@ -4,6 +4,7 @@ declare -A __chromatic_attrib __chromatic_attrib_zle
 # Default atrributes
 __chromatic_attrib=(
     aliases        '1;35'
+    none           '0'
     builtins       '1;33'
     comments       '2;37'
     directories    '1;34'
@@ -14,10 +15,13 @@ __chromatic_attrib=(
     parameters     '32'
     process-ids    '1;31'
     process-names  '1;33'
+    region         '44'
     reserved-words '31'
     search-line    '37'
     search-pattern '1;33;41'
     separators     '35'
+    special        '36'
+    suffix         '0'
 )
 
 if [[ "$ncolors" == 256 ]]; then
@@ -33,6 +37,7 @@ if [[ "$ncolors" == 256 ]]; then
 	parameters     '38;5;28'
         process-ids    '38;5;196'
 	process-names  '33'
+	region         '48;5;17'
     )
 fi
 

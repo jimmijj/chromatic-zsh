@@ -173,6 +173,7 @@ _check_common_expression()
 	'$('*')')
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
+	    array+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos")
 	    substr_color=1
 	    ;;
 	'`'*'`')

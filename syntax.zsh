@@ -1,3 +1,4 @@
+typeset -gA array
 ## First set static zle_highlight and activate it
 _search()
 {
@@ -8,11 +9,20 @@ _search()
 _syntax()
 {
     [[ "$BUFFER" != "$_lastbuffer" ]] && _zsh_highlight_main_highlighter && region_highlight_copy=("${region_highlight[@]}")
-    # [[ "$BUFFER" == "$_lastbuffer" ]] && ((CURSOR!=_lastcursor)) && _zsh_highlight_main_highlighter
-
-    region_highlight=("${region_highlight_copy[@]}")
+    
+    [[ "$BUFFER" == "$_lastbuffer" ]] && ((CURSOR!=_lastcursor)) &&
+	{
+	    region_highlight=("${region_highlight_copy[@]}")
+	    for x in ${(k)array}; do
+		read ts bs <<<"$x"
+		read te be <<<"${array[$x]}"
+		(((CURSOR>ts&&CURSOR<=bs)||(CURSOR>te&&CURSOR<=be))) && region_highlight+=("$ts $bs bg=33" "$te $be bg=133")
+	    done
+	}
+    
+    #    region_highlight=("${region_highlight_copy[@]}")
     ((REGION_ACTIVE)) && region_highlight+=("$((CURSOR < MARK ? CURSOR : MARK)) $((CURSOR > MARK ? CURSOR : MARK)) ${${(M)zle_highlight[@]:#region*}#region:}")
-
+    
     _lastbuffer="$BUFFER"; _lastcursor="$CURSOR"
 }
 

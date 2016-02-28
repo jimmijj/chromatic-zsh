@@ -21,7 +21,7 @@ __chromatic_attrib=(
     search-pattern '1;33;41'
     separators     '35'
     special        '36'
-    suffix         '0'
+    suffix         '46'
 )
 
 if [[ "$ncolors" == 256 ]]; then

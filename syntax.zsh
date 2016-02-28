@@ -13,13 +13,11 @@ _syntax()
     [[ "$BUFFER" == "$_lastbuffer" ]] && ((CURSOR!=_lastcursor)) &&
 	{
 	    region_highlight=("${region_highlight_copy[@]}")
-	    for x in ${(k)array}; do
-		read ts bs <<<"$x"
-		read te be <<<"${array[$x]}"
-		(((CURSOR>ts&&CURSOR<=bs)||(CURSOR>te&&CURSOR<=be))) && region_highlight+=("$ts $bs bg=33" "$te $be bg=133")
+	    for ts bs te be in ${(zkv)array}; do
+		(((CURSOR>ts&&CURSOR<=bs)||(CURSOR>te&&CURSOR<=be))) && region_highlight+=("$ts $bs ${__chromatic_attrib_zle[suffix]}" "$te $be ${__chromatic_attrib_zle[suffix]}")
 	    done
 	}
-    
+
     #    region_highlight=("${region_highlight_copy[@]}")
     ((REGION_ACTIVE)) && region_highlight+=("$((CURSOR < MARK ? CURSOR : MARK)) $((CURSOR > MARK ? CURSOR : MARK)) ${${(M)zle_highlight[@]:#region*}#region:}")
     

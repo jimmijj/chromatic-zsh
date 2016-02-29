@@ -87,7 +87,7 @@ _zsh_highlight_main_highlighter()
     typeset -a ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
     typeset -a ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS
     region_highlight=()
-
+    _block=()
     ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR=(
 	'|' '||' ';' '&' '&&' '&|' '|&' '&!' '(' ';;' '{'
     )
@@ -173,12 +173,12 @@ _check_common_expression()
 	'$('*')')
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
-	    array+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos")
 	    substr_color=1
 	    ;;
 	'`'*'`')
 	    region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle[builtins]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
+	    _block+=("$start_pos $((start_pos+1))" "$((end_pos-1)) $end_pos")
 	    substr_color=1
 	    ;;
 	'{') isbrace=1; style="${__chromatic_attrib_zle[reserved-words]}";;

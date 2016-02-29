@@ -1,4 +1,6 @@
-typeset -gA array
+## array for block (complex) commands
+typeset -gA _block
+
 ## First set static zle_highlight and activate it
 _search()
 {
@@ -8,17 +10,17 @@ _search()
 ## Next rebuilt dynamically region_highlight on any buffer event
 _syntax()
 {
-    [[ "$BUFFER" != "$_lastbuffer" ]] && _zsh_highlight_main_highlighter && region_highlight_copy=("${region_highlight[@]}")
+    if [[ "$BUFFER" != "$_lastbuffer" ]]; then
+	_zsh_highlight_main_highlighter
+	region_highlight_copy=("${region_highlight[@]}")
+fi
+#   elif ((CURSOR!=_lastcursor)); then
+ #   fi
+    region_highlight=("${region_highlight_copy[@]}")
+    for ts bs te be in ${(zkv)_block}; do
+	(((CURSOR>ts&&CURSOR<=bs)||(CURSOR>te&&CURSOR<=be))) && region_highlight+=("$ts $bs ${__chromatic_attrib_zle[suffix]}" "$te $be ${__chromatic_attrib_zle[suffix]}")
+    done
     
-    [[ "$BUFFER" == "$_lastbuffer" ]] && ((CURSOR!=_lastcursor)) &&
-	{
-	    region_highlight=("${region_highlight_copy[@]}")
-	    for ts bs te be in ${(zkv)array}; do
-		(((CURSOR>ts&&CURSOR<=bs)||(CURSOR>te&&CURSOR<=be))) && region_highlight+=("$ts $bs ${__chromatic_attrib_zle[suffix]}" "$te $be ${__chromatic_attrib_zle[suffix]}")
-	    done
-	}
-
-    #    region_highlight=("${region_highlight_copy[@]}")
     ((REGION_ACTIVE)) && region_highlight+=("$((CURSOR < MARK ? CURSOR : MARK)) $((CURSOR > MARK ? CURSOR : MARK)) ${${(M)zle_highlight[@]:#region*}#region:}")
     
     _lastbuffer="$BUFFER"; _lastcursor="$CURSOR"
@@ -26,27 +28,6 @@ _syntax()
 
 typeset -gA ZSH_HIGHLIGHT_STYLES
 typeset -gA ZSH_HIGHLIGHT_FILES
-
-# Whether the command line buffer has been modified or not.
-#
-# Returns 0 if the buffer has changed since _zsh_highlight was last called.
-_zsh_highlight_buffer_modified()
-{
-    [[ "${_ZSH_HIGHLIGHT_PRIOR_BUFFER:-}" != "$BUFFER" ]]
-}
-
-# Whether the cursor has moved or not.
-#
-# Returns 0 if the cursor has moved since _zsh_highlight was last called.
-_zsh_highlight_cursor_moved()
-{
-    [[ -n $CURSOR ]] && [[ -n ${_ZSH_HIGHLIGHT_PRIOR_CURSOR-} ]] && (($_ZSH_HIGHLIGHT_PRIOR_CURSOR != $CURSOR))
-}
-
-
-# -------------------------------------------------------------------------------------------------
-# Setup functions
-# -------------------------------------------------------------------------------------------------
 
 # Rebind all ZLE widgets to make them invoke _zsh_highlights.
 _zsh_highlight_bind_widgets()
@@ -90,24 +71,8 @@ _zsh_highlight_bind_widgets()
     done
 }
 
-# -------------------------------------------------------------------------------------------------
-# Setup
-# -------------------------------------------------------------------------------------------------
-
-# Try binding widgets.
-_zsh_highlight_bind_widgets || {
-    echo 'zsh-syntax-highlighting: failed binding ZLE widgets, exiting.' >&2
-    return 1
-}
+## Try binding widgets.
+_zsh_highlight_bind_widgets
 
 ## Load highlighters
-. ${0:h}/highlighters/main/main-highlighter.zsh
-
-# Reset scratch variables when commandline is done.
-_zsh_highlight_preexec_hook()
-{
-    _ZSH_HIGHLIGHT_PRIOR_BUFFER=
-    _ZSH_HIGHLIGHT_PRIOR_CURSOR=
-}
-autoload -U add-zsh-hook
-add-zsh-hook preexec _zsh_highlight_preexec_hook
+. "${0:h}"/highlighters/main/main-highlighter.zsh

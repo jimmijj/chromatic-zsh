@@ -9,6 +9,7 @@ __chromatic_attrib=(
     comments       '2;37'
     directories    '1;34'
     functions      '33'
+    globs          '34'
     manuals        '32'
     numbers        '2;36'
     options        '36'

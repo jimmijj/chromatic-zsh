@@ -173,6 +173,7 @@ _check_common_expression()
 	'$('*')')
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
+	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos")
 	    substr_color=1
 	    ;;
 	'`'*'`')
@@ -220,7 +221,9 @@ _check_leading_expression()
 		style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
 	    else
 	    case "$1" in
-		'(('*'))') style="${__chromatic_attrib_zle[numbers]}";;
+		'(('*'))')
+		    style="${__chromatic_attrib_zle[numbers]}"
+		    _block+=("$start_pos $((start_pos+2))" "$((end_pos-2)) $end_pos");;
 		'('|')') style="${__chromatic_attrib_zle[functions]}";;
 		*) style=$ZSH_HIGHLIGHT_STYLES[unknown-token];;
 	    esac
@@ -234,12 +237,14 @@ _check_subsequent_expression()
 	'--'*|'-'*) style="${__chromatic_attrib_zle[options]}";;
 	'|'|'|&') style="${__chromatic_attrib_zle[pi]}";;
 	'||'|'&&'|'&'|'&|'|'&!'|';;') style="${__chromatic_attrib_zle[separators]}";;
-	'$(('*'))') style="${__chromatic_attrib_zle[numbers]}";;
+	'$(('*'))')
+	    style="${__chromatic_attrib_zle[numbers]}"
+	    _block+=("$start_pos $((start_pos+3))" "$((end_pos-2)) $end_pos");;
 	'<('*')'|'>('*')'|'=('*')')
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[cd]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[cd]}")
-	    substr_color=1
-	    ;;
+	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos")
+	    substr_color=1;;
     esac
 }
 

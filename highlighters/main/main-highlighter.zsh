@@ -179,18 +179,22 @@ _check_common_expression()
 	'$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}";;
 #	'('|')'|'$('*')'|'$(('*'))') isgroup=1 ;|
 	')') style="${__chromatic_attrib_zle[functions]}";;
+	'$(('*'))')
+	    style="${__chromatic_attrib_zle[numbers]}"
+	    _block+=("$start_pos $((start_pos+3))" "$((end_pos-2)) $end_pos");;
+	'$['*']')
+	    style="${__chromatic_attrib_zle[numbers]}"
+	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos");;
 	'$('*')')
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
 	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos")
-	    substr_color=1
-	    ;;
+	    substr_color=1;;
 	'`'*'`')
 	    region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle[builtins]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
 	    _block+=("$start_pos $((start_pos+1))" "$((end_pos-1)) $end_pos")
-	    substr_color=1
-	    ;;
+	    substr_color=1;;
 	'{') isbrace=1; style="${__chromatic_attrib_zle[reserved-words]}";;
 	'}') style="${__chromatic_attrib_zle[reserved-words]}";;
 	?'..'?|[0-9]##'..'[0-9]##'..'[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
@@ -246,9 +250,6 @@ _check_subsequent_expression()
 	'--'*|'-'*) style="${__chromatic_attrib_zle[options]}";;
 	'|'|'|&') style="${__chromatic_attrib_zle[pi]}";;
 	'||'|'&&'|'&'|'&|'|'&!'|';;') style="${__chromatic_attrib_zle[separators]}";;
-	'$(('*'))')
-	    style="${__chromatic_attrib_zle[numbers]}"
-	    _block+=("$start_pos $((start_pos+3))" "$((end_pos-2)) $end_pos");;
 	'<('*')'|'>('*')'|'=('*')')
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[cd]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[cd]}")

@@ -35,40 +35,6 @@ ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 : ${ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]:=fg=cyan}
 : ${ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]:=fg=cyan}
 
-# Whether the highlighter should be called or not.
-_zsh_highlight_main_highlighter_predicate()
-{
-#    _zsh_highlight_buffer_modified
-		  _zsh_highlight_cursor_moved || _zsh_highlight_buffer_modified
-}
-
-## In case we need to highlight in other circumstances then default from highlighter_predicate lets define a switcher
-_zsh_highlight_main_highlighter_predicate_switcher()
-{
-    case $1 in
-	'b') # buffer
-            _zsh_highlight_main_highlighter_predicate()
-	    {
-		_zsh_highlight_buffer_modified
-	    };;
-	'c') # cursor
-	    _zsh_highlight_main_highlighter_predicate()
-	    {
-		_zsh_highlight_cursor_moved
-	    };;
-	'bc') bccounter=0 # buffer and cursor
-	      _zsh_highlight_main_highlighter_predicate()
-	      {
-		  ## In order to prevent slowdown only one invocation of this function is allowed.
-		  ## Most visible reason is with matching part of the file - to retain highlighting only one right/left move of the cursor is possible.
-		  ((bccounter++))
-		  (( bccounter > 1 )) && _zsh_highlight_main_highlighter_predicate_switcher b
-		  _zsh_highlight_cursor_moved || _zsh_highlight_buffer_modified
-	      };;
-	*);;
-    esac
-}
-
 # Main syntax highlighting function.
 _zsh_highlight_main_highlighter()
 {

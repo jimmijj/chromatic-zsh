@@ -1,42 +1,5 @@
-#!/usr/bin/env zsh
-# -------------------------------------------------------------------------------------------------
-# Copyright (c) 2010-2011 zsh-syntax-highlighting contributors
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without modification, are permitted
-# provided that the following conditions are met:
-#
-#  * Redistributions of source code must retain the above copyright notice, this list of conditions
-#    and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright notice, this list of
-#    conditions and the following disclaimer in the documentation and/or other materials provided
-#    with the distribution.
-#  * Neither the name of the zsh-syntax-highlighting contributors nor the names of its contributors
-#    may be used to endorse or promote products derived from this software without specific prior
-#    written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
-# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
-# FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
-# CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
-# IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
-# OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# -------------------------------------------------------------------------------------------------
-
-
-# Define default styles.
-ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
-
-: ${ZSH_HIGHLIGHT_STYLES[command_prefix]:=fg=green}
-: ${ZSH_HIGHLIGHT_STYLES[redirection]:=fg=magenta}
-: ${ZSH_HIGHLIGHT_STYLES[history-expansion]:=fg=blue}
-: ${ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]:=fg=cyan}
-: ${ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]:=fg=cyan}
-
-# Main syntax highlighting function.
-_zsh_highlight_main_highlighter()
+## parse the entire command line and build region_highlight array
+_parse()
 {
     # if _zsh_highlight_cursor_moved && ! _zsh_highlight_buffer_modified; then
     # case ${BUFFER[$CURSOR]} in
@@ -112,13 +75,12 @@ _zsh_highlight_main_highlighter()
 		   _check_common_expression "$arg" || _check_leading_expression "$arg"
 	       fi
 	   else
-	       _check_common_expression "$arg" || _check_subsequent_expression "$arg" || style=$ZSH_HIGHLIGHT_STYLES[default];
+	       _check_common_expression "$arg" || _check_subsequent_expression "$arg" || style="${__chromatic_attrib_zle[default]}";
 	   fi
 
 	   ((isbrace==1&&isbrace++||(isbrace=0)))
-#	   ((isgroup)) && _zsh_highlight_brackets_highlighter
 	   # if a style_override was set (eg in _zsh_highlight_main_highlighter_check_path), use it
-	   [[ -n $style_override ]] && style=$ZSH_HIGHLIGHT_STYLES[$style_override]
+	   [[ -n $style_override ]] && style=$__chromatic_attrib_zle[$style_override]
 	   if [[ $isfile == true ]]; then
 	       ((start_file_pos=start_pos+${#arg}-${#arg:t}))
 	       end_file_pos=$end_pos
@@ -131,7 +93,7 @@ _zsh_highlight_main_highlighter()
     done
 }
 
-## common
+## Look for expressions which may be present on any position in the command line
 _check_common_expression()
 {
     case "$1" in
@@ -166,19 +128,21 @@ _check_common_expression()
 	?'..'?|[0-9]##'..'[0-9]##'..'[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
 	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[globs]}";;
 	';') style="${__chromatic_attrib_zle[separators]}";;
-	*) if _zsh_highlight_main_highlighter_check_path; then
+	*) if _check_path; then
 	       style="${__chromatic_attrib_zle[di]}"
 	   elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$1"} ]]; then
-	       style=$ZSH_HIGHLIGHT_STYLES[redirection]
+	       style=$__chromatic_attrib_zle[redirection]
 	   elif [[ $1[0,1] = $histchars[0,1] ]]; then
-	       style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
+	       style=$__chromatic_attrib_zle[history-expansion]
 	   else
 	       style="${__chromatic_attrib[default]}"
 	   fi
-	   _zsh_highlight_main_highlighter_check_file && isfile=true
+	   _check_file && isfile=true
 	   ;;
     esac
 }
+
+## Look for a leading expressions
 _check_leading_expression()
 {
     res=$(LC_ALL=C builtin type -w "$1" 2>/dev/null)
@@ -191,13 +155,13 @@ _check_leading_expression()
 	*': function')  style="${__chromatic_attrib_zle[functions]}";;
 	*': command'|*': hashed') style="${__chromatic_attrib_zle[ex]}";;
 	*)
-            if _zsh_highlight_main_highlighter_check_assign; then
+            if [[ [a-zA-Z0-9_]##(|\[*\])=* ]]; then
 		style="${__chromatic_attrib_zle[parameters]}"
 		new_expression=true
-	    elif _zsh_highlight_main_highlighter_check_command; then
-		style=$ZSH_HIGHLIGHT_STYLES[command_prefix]
+	    elif _check_command; then
+		style=$__chromatic_attrib_zle[command_prefix]
 	    elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
-		style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
+		style=$__chromatic_attrib_zle[history-expansion]
 	    else
 	    case "$1" in
 		'(('*'))')
@@ -213,6 +177,8 @@ _check_leading_expression()
 	    ;;
     esac
 }
+
+## Look for a subsequent expressions
 _check_subsequent_expression()
 {
     case "$1" in
@@ -227,15 +193,8 @@ _check_subsequent_expression()
     esac
 }
 
-# Check if the argument is variable assignment
-_zsh_highlight_main_highlighter_check_assign()
-{
-    setopt localoptions extended_glob
-    [[ $arg == [[:alpha:]_][[:alnum:]_]#(|\[*\])=* ]]
-}
-
-# Check if the argument is a path.
-_zsh_highlight_main_highlighter_check_path()
+## Check if the argument is a path
+_check_path()
 {
     setopt localoptions nonomatch
     local expanded_path; : ${expanded_path:=${(Q)~arg}}
@@ -251,7 +210,7 @@ _zsh_highlight_main_highlighter_check_path()
 	local -a tmp
 	# got a path prefix?
 	tmp=( ${expanded_path}*(N) )
-	(( $#tmp > 0 )) && style_override=path_prefix && _zsh_highlight_main_highlighter_predicate_switcher bc && return 0
+	(( $#tmp > 0 )) && style_override=path_prefix && : _zsh_highlight_main_highlighter_predicate_switcher bc && return 0
     fi
     return 1
 }
@@ -287,10 +246,10 @@ _zsh_highlight_main_highlighter_highlight_string()
 # 	(( j = i + start_pos - 1 ))
 # 	(( k = j + 1 ))
 # 	case "$arg[$i]" in
-# 	    '$') style=$ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]
+# 	    '$') style=$__chromatic_attrib_zle[dollar-double-quoted-argument]
 # 		  (( varflag = 1))
 #   		  ;;
-# 	    "\\") style=$ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]
+# 	    "\\") style=$__chromatic_attrib_zle[back-double-quoted-argument]
 # 		  for (( c = i + 1 ; c < end_pos - start_pos ; c += 1 )); do
 # 		      [[ "$arg[$c]" != ([0-9,xX,a-f,A-F]) ]] && break
 # 		  done
@@ -315,7 +274,7 @@ _zsh_highlight_main_highlighter_highlight_string()
 }
  
 ## Check if command with given prefix exists
-_zsh_highlight_main_highlighter_check_command()
+_check_command()
 {
     setopt localoptions nonomatch
     local -a prefixed_command
@@ -325,7 +284,7 @@ _zsh_highlight_main_highlighter_check_command()
 }
 
 ## Check if the argument is a file, if yes change the style accordingly
-_zsh_highlight_main_highlighter_check_file()
+_check_file()
 {
     setopt localoptions nonomatch
     local expanded_arg matched_file
@@ -335,7 +294,7 @@ _zsh_highlight_main_highlighter_check_file()
     [[ -d "$expanded_arg" ]] && return 1
     [[ "${BUFFER[1]}" != "-" && "${#LBUFFER}" == "$end_pos" ]] && matched_file=("${expanded_arg}"*(Noa^/[1]))
     [[ -e "$expanded_arg" || -e "$matched_file" ]] && lsstyle=none || return 1
-    [[ -e "$matched_file" ]] && _zsh_highlight_main_highlighter_predicate_switcher bc
+    [[ -e "$matched_file" ]] && : _zsh_highlight_main_highlighter_predicate_switcher bc
 
     [[ ! -z "${__chromatic_attrib_zle[file]}" ]] && lsstyle="${__chromatic_attrib_zle[file]}" && return 0
 

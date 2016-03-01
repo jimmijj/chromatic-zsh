@@ -8,7 +8,7 @@ _search()
 _syntax()
 {
     if [[ "$BUFFER" != "$_lastbuffer" ]]; then
-	_zsh_highlight_main_highlighter
+	_parse
 	region_highlight_copy=("${region_highlight[@]}")
 fi
 #   elif ((CURSOR!=_lastcursor)); then
@@ -73,4 +73,4 @@ _zsh_highlight_bind_widgets()
 _zsh_highlight_bind_widgets
 
 ## Load highlighters
-. "${0:h}"/highlighters/main/main-highlighter.zsh
+. "${0:h}"/parser.zsh

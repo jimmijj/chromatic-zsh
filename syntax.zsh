@@ -1,6 +1,3 @@
-## array for block (complex) commands
-typeset -gA _block
-
 ## First set static zle_highlight and activate it
 _search()
 {
@@ -16,6 +13,7 @@ _syntax()
 fi
 #   elif ((CURSOR!=_lastcursor)); then
  #   fi
+
     region_highlight=("${region_highlight_copy[@]}")
     for ts bs te be in ${(zkv)_block}; do
 	(((CURSOR>ts&&CURSOR<=bs)||(CURSOR>te&&CURSOR<=be))) && region_highlight+=("$ts $bs ${__chromatic_attrib_zle[suffix]}" "$te $be ${__chromatic_attrib_zle[suffix]}")

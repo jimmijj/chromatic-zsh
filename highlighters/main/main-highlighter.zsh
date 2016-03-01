@@ -29,11 +29,8 @@
 # Define default styles.
 ZSH_HIGHLIGHT_STYLES=(${(kv)__chromatic_attrib_zle})
 
-: ${ZSH_HIGHLIGHT_STYLES[default]:=none}
-: ${ZSH_HIGHLIGHT_STYLES[unknown-token]:=fg=red,bold}
 : ${ZSH_HIGHLIGHT_STYLES[command_prefix]:=fg=green}
 : ${ZSH_HIGHLIGHT_STYLES[redirection]:=fg=magenta}
-: ${ZSH_HIGHLIGHT_STYLES[file]:=}
 : ${ZSH_HIGHLIGHT_STYLES[history-expansion]:=fg=blue}
 : ${ZSH_HIGHLIGHT_STYLES[dollar-double-quoted-argument]:=fg=cyan}
 : ${ZSH_HIGHLIGHT_STYLES[back-double-quoted-argument]:=fg=cyan}
@@ -91,6 +88,8 @@ _zsh_highlight_main_highlighter()
     typeset -a ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS
     region_highlight=()
     _block=()
+    _blokl=()
+    _blockp=()
 
     ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR=(
 	'|' '||' ';' '&' '&&' '&|' '|&' '&!' '(' ';;' '{'
@@ -151,7 +150,7 @@ _zsh_highlight_main_highlighter()
 	   fi
 
 	   ((isbrace==1&&isbrace++||(isbrace=0)))
-	   ((isgroup)) && _zsh_highlight_brackets_highlighter
+#	   ((isgroup)) && _zsh_highlight_brackets_highlighter
 	   # if a style_override was set (eg in _zsh_highlight_main_highlighter_check_path), use it
 	   [[ -n $style_override ]] && style=$ZSH_HIGHLIGHT_STYLES[$style_override]
 	   if [[ $isfile == true ]]; then
@@ -177,8 +176,9 @@ _check_common_expression()
 		 substr_color=1
 		 ;;
 	'$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}";;
-#	'('|')'|'$('*')'|'$(('*'))') isgroup=1 ;|
-	')') style="${__chromatic_attrib_zle[functions]}";;
+        ')')
+	    ((_blockl[1]>0)) && _block+=("$_blockp[${_blockl[1]}]" "$((end_pos-1)) $end_pos") && ((_blockl[1]--))
+            style="${__chromatic_attrib_zle[functions]}";;
 	'$(('*'))')
 	    style="${__chromatic_attrib_zle[numbers]}"
 	    _block+=("$start_pos $((start_pos+3))" "$((end_pos-2)) $end_pos");;
@@ -207,7 +207,7 @@ _check_common_expression()
 	   elif [[ $1[0,1] = $histchars[0,1] ]]; then
 	       style=$ZSH_HIGHLIGHT_STYLES[history-expansion]
 	   else
-	       style=$ZSH_HIGHLIGHT_STYLES[default]
+	       style="${__chromatic_attrib[default]}"
 	   fi
 	   _zsh_highlight_main_highlighter_check_file && isfile=true
 	   ;;
@@ -237,8 +237,11 @@ _check_leading_expression()
 		'(('*'))')
 		    style="${__chromatic_attrib_zle[numbers]}"
 		    _block+=("$start_pos $((start_pos+2))" "$((end_pos-2)) $end_pos");;
-		'('|')') style="${__chromatic_attrib_zle[functions]}";;
-		*) style=$ZSH_HIGHLIGHT_STYLES[unknown-token];;
+		'(')
+		    ((_blockl[1]++))
+		    _blockp[${_blockl[1]}]="$start_pos $end_pos"
+		    style="${__chromatic_attrib_zle[functions]}";;
+		*) ;;
 	    esac
 	    fi
 	    ;;
@@ -368,7 +371,7 @@ _zsh_highlight_main_highlighter_check_file()
     [[ -e "$expanded_arg" || -e "$matched_file" ]] && lsstyle=none || return 1
     [[ -e "$matched_file" ]] && _zsh_highlight_main_highlighter_predicate_switcher bc
 
-    [[ ! -z "${ZSH_HIGHLIGHT_STYLES[file]}" ]] && lsstyle="${ZSH_HIGHLIGHT_STYLES[file]}" && return 0
+    [[ ! -z "${__chromatic_attrib_zle[file]}" ]] && lsstyle="${__chromatic_attrib_zle[file]}" && return 0
 
     # [[ rs ]]
     # [[ -d $expanded_arg || -d $matched_file ]] && lsstyle=$__chromatic_attrib_zle[di] && return 0
@@ -393,82 +396,4 @@ _zsh_highlight_main_highlighter_check_file()
     [[ -n "$matched_file:e" ]] && lsstyle="${__chromatic_attrib_zle[*.$matched_file:e]}" && return 0
 
     return 0
-}
-# Define default styles.
-: ${ZSH_HIGHLIGHT_STYLES[bracket-error]:=fg=red,bold}
-: ${ZSH_HIGHLIGHT_STYLES[bracket-level-1]:=fg=blue,bold}
-: ${ZSH_HIGHLIGHT_STYLES[bracket-level-2]:=fg=green,bold}
-: ${ZSH_HIGHLIGHT_STYLES[bracket-level-3]:=fg=magenta,bold}
-: ${ZSH_HIGHLIGHT_STYLES[bracket-level-4]:=fg=yellow,bold}
-: ${ZSH_HIGHLIGHT_STYLES[bracket-level-5]:=fg=cyan,bold}
-: ${ZSH_HIGHLIGHT_STYLES[cursor-matchingbracket]:=standout}
-
-
-
-# Brackets highlighting function.
-_zsh_highlight_brackets_highlighter()
-{
-    _zsh_highlight_main_highlighter_predicate_switcher bc
-  local level=0 pos
-  local -A levelpos lastoflevel matching typepos
-
-  # Find all brackets and remember which one is matching
-  for (( pos = 0; $pos < ${#BUFFER}; pos++ )) ; do
-    local char="$BUFFER[pos+1]"
-    case $char in
-      ["([{"])
-        levelpos[$pos]=$((++level))
-        lastoflevel[$level]=$pos
-#        _zsh_highlight_brackets_highlighter_brackettype "$char"
-        ;;
-      [")]}"])
-        matching[$lastoflevel[$level]]=$pos
-        matching[$pos]=$lastoflevel[$level]
-        levelpos[$pos]=$((level--))
-#        _zsh_highlight_brackets_highlighter_brackettype "$char"
-        ;;
-      ['"'\'])
-        # Skip everything inside quotes
-        local quotetype=$char
-        while (( $pos < ${#BUFFER} )) ; do
-          (( pos++ ))
-          [[ $BUFFER[$pos+1] == $quotetype ]] && break
-        done
-        ;;
-    esac
-  done
-
-  # Now highlight all found brackets
-  for pos in ${(k)levelpos}; do
-    if [[ -n $matching[$pos] ]] && [[ $typepos[$pos] == $typepos[$matching[$pos]] ]]; then
-      local bracket_color_size=${#ZSH_HIGHLIGHT_STYLES[(I)bracket-level-*]}
-      local bracket_color_level=bracket-level-$(( (levelpos[$pos] - 1) % bracket_color_size + 1 ))
-      local style=$ZSH_HIGHLIGHT_STYLES[$bracket_color_level]
-#      region_highlight+=("$pos $((pos + 1)) $style")
-    else
-      local style=$ZSH_HIGHLIGHT_STYLES[bracket-error]
-#      region_highlight+=("$pos $((pos + 1)) $style")
-    fi
-  done
-
-  # If cursor is on a bracket, then highlight corresponding bracket, if any
-  pos=$CURSOR
-#  echo a $pos b $levelpos[$pos]  c $matching[$pos]
-  if [[ -n $levelpos[$pos] ]] && [[ -n $matching[$pos] ]]; then
-    local otherpos=$matching[$pos]
-    local style=$ZSH_HIGHLIGHT_STYLES[cursor-matchingbracket]
-#echo $style $otherpos
-    region_highlight+=("$otherpos $((otherpos + 1)) $style")
-  fi
-}
-
-# Helper function to differentiate type 
-_zsh_highlight_brackets_highlighter_brackettype()
-{
-  case $1 in
-    ["()"]) typepos[$pos]=round;;
-    ["[]"]) typepos[$pos]=bracket;;
-    ["{}"]) typepos[$pos]=curly;;
-    *) ;;
-  esac
 }

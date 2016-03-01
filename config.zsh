@@ -8,6 +8,8 @@ __chromatic_attrib=(
     builtins       '1;33'
     comments       '2;37'
     directories    '1;34'
+    defaults       '0'
+    files          '0'
     functions      '33'
     globs          '34'
     manuals        '32'

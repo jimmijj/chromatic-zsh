@@ -1,13 +1,6 @@
 ## parse the entire command line and build region_highlight array
 _parse()
 {
-    # if _zsh_highlight_cursor_moved && ! _zsh_highlight_buffer_modified; then
-    # case ${BUFFER[$CURSOR]} in
-    # 	'('|')'|'['|']'|'{'|'}') :;;
-    # 	*) return 0;
-    # esac
-    # fi
-
     emulate -L zsh
     setopt localoptions extendedglob bareglobqual
     local start_pos=0 end_pos highlight_glob=true new_expression=true arg style lsstyle start_file_pos end_file_pos sudo=false sudo_arg=false isbrace=0
@@ -135,7 +128,7 @@ _check_common_expression()
 	   elif [[ $1[0,1] = $histchars[0,1] ]]; then
 	       style=$__chromatic_attrib_zle[history-expansion]
 	   else
-	       style="${__chromatic_attrib[default]}"
+	       style="${__chromatic_attrib_zle[default]}"
 	   fi
 	   _check_file && isfile=true
 	   ;;
@@ -155,7 +148,7 @@ _check_leading_expression()
 	*': function')  style="${__chromatic_attrib_zle[functions]}";;
 	*': command'|*': hashed') style="${__chromatic_attrib_zle[ex]}";;
 	*)
-            if [[ [a-zA-Z0-9_]##(|\[*\])=* ]]; then
+            if [[ $arg == [a-zA-Z0-9_]##(|\[*\])=* ]]; then
 		style="${__chromatic_attrib_zle[parameters]}"
 		new_expression=true
 	    elif _check_command; then

@@ -16,7 +16,7 @@ fi
 
     region_highlight=("${region_highlight_copy[@]}")
     for ts bs te be in ${(zkv)_block}; do
-	(((CURSOR>ts&&CURSOR<=bs)||(CURSOR>te&&CURSOR<=be))) && region_highlight+=("$ts $bs ${__chromatic_attrib_zle[suffix]}" "$te $be ${__chromatic_attrib_zle[suffix]}")
+	(((CURSOR>=ts&&CURSOR<bs)||(CURSOR>te&&CURSOR<=be))) && region_highlight+=("$ts $bs ${__chromatic_attrib_zle[suffix]}" "$te $be ${__chromatic_attrib_zle[suffix]}")
     done
     
     ((REGION_ACTIVE)) && region_highlight+=("$((CURSOR < MARK ? CURSOR : MARK)) $((CURSOR > MARK ? CURSOR : MARK)) ${${(M)zle_highlight[@]:#region*}#region:}")
@@ -24,53 +24,32 @@ fi
     _lastbuffer="$BUFFER"; _lastcursor="$CURSOR"
 }
 
-typeset -gA ZSH_HIGHLIGHT_STYLES
-typeset -gA ZSH_HIGHLIGHT_FILES
-
-# Rebind all ZLE widgets to make them invoke _zsh_highlights.
-_zsh_highlight_bind_widgets()
+## Widgets redefinition to call _syntax on each event
+_redefine_widgets()
 {
-    # Load ZSH module zsh/zleparameter, needed to override user defined widgets.
-    zmodload zsh/zleparameter 2>/dev/null || {
-	echo 'zsh-syntax-highlighting: failed loading zsh/zleparameter.' >&2
-	return 1
-    }
+    local widget
+    for widget in ${${(f)"$(builtin zle -la)"}:#(.*|_*|run-help|beep|auto-*|*-argument|argument-base|clear-screen|describe-key-briefly|history-incremental*|kill-buffer|overwrite-mode|push-input|push-line-or-edit|reset-prompt|set-local-history|split-undo|undefined-key|what-cursor-position|where-is)}; do
+	case $widgets[$widget] in
 
-    # Override ZLE widgets to make them invoke _zsh_highlight.
-    local cur_widget
-    for cur_widget in ${${(f)"$(builtin zle -la)"}:#(.*|_*|orig-*|run-help|beep|auto-*|*-argument|argument-base|clear-screen|describe-key-briefly|history-incremental*|kill-buffer|overwrite-mode|push-input|push-line-or-edit|reset-prompt|set-local-history|split-undo|undefined-key|what-cursor-position|where-is)}; do
-	case $widgets[$cur_widget] in
+	    # Builtin widgets: override and make it call the builtin ".widget".
+	    builtin) eval "_._$widget() { builtin zle .$widget -- \"\$@\" && _syntax }; \
+                     zle -N $widget _._$widget";;
 
-	    # Already rebound event: do nothing.
-	    user:$cur_widget|user:_zsh_highlight_widget_*);;
+	    # Completion widget
+	    completion:*)
+		eval "zle -C _._-$widget ${${widgets[$widget]#*:}/:/ }; _._$widget() { builtin zle _._-$widget -- \"\$@\" && _syntax }; \
+                          zle -N $widget _._$widget";;
 
-	    # User defined widget: override and rebind old one with prefix "orig-".
-	    user:*) eval "zle -N orig-$cur_widget ${widgets[$cur_widget]#*:}; \
-                    _zsh_highlight_widget_$cur_widget() { builtin zle orig-$cur_widget -- \"\$@\" && _syntax }; \
-                    zle -N $cur_widget _zsh_highlight_widget_$cur_widget";;
-
-	    # Completion widget: override and rebind old one with prefix "orig-".
-	    completion:*) eval "zle -C orig-$cur_widget ${${widgets[$cur_widget]#*:}/:/ }; \
-                          _zsh_highlight_widget_$cur_widget() { builtin zle orig-$cur_widget -- \"\$@\" && _syntax }; \
-                          zle -N $cur_widget _zsh_highlight_widget_$cur_widget";;
-
-	    # Builtin widget: override and make it call the builtin ".widget".
-	    builtin) eval "_zsh_highlight_widget_$cur_widget() { builtin zle .$cur_widget -- \"\$@\" && _syntax }; \
-                     zle -N $cur_widget _zsh_highlight_widget_$cur_widget";;
-
-	    # Default: unhandled case.
-	    *) echo "zsh-syntax-highlighting: unhandled ZLE widget '$cur_widget'" >&2 ;;
+	    ## Skip widgets defined by users and the like
+	    *) ;;
 	esac
     done
 
-    ## Special treatment of history-incremental* search widgets
-    for search_widget in history-incremental-pattern-search-backward history-incremental-pattern-search-forward history-incremental-search-backward history-incremental-search-forward; do
-	eval "_zsh_highlight_widget_$search_widget () { zle_highlight=(default:\${__chromatic_attrib_zle[search-line]} isearch:\${__chromatic_attrib_zle[search-pattern]}); builtin zle .$search_widget -- \"\$@\" && _search && _syntax }; zle -N $search_widget _zsh_highlight_widget_$search_widget"
+    ## Rebuild zle_highlight array for history-incremental* search widgets
+    for widget in history-incremental-pattern-search-backward history-incremental-pattern-search-forward history-incremental-search-backward history-incremental-search-forward; do
+	eval "_._$widget() { zle_highlight=(default:\${__chromatic_attrib_zle[search-line]} isearch:\${__chromatic_attrib_zle[search-pattern]}); builtin zle .$widget -- \"\$@\" && _search && _syntax }; zle -N $widget _._$widget"
     done
-}
+} && _redefine_widgets
 
-## Try binding widgets.
-_zsh_highlight_bind_widgets
-
-## Load highlighters
+## Load parser
 . "${0:h}"/parser.zsh

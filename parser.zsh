@@ -10,7 +10,7 @@ _parse()
     typeset -a ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS
     region_highlight=()
     _block=()
-    _blokl=()
+    _blockl=()
     _blockp=()
 
     ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR=(
@@ -72,7 +72,7 @@ _parse()
 	   fi
 
 	   ((isbrace==1&&isbrace++||(isbrace=0)))
-	   # if a style_override was set (eg in _zsh_highlight_main_highlighter_check_path), use it
+	   # if a style_override was set (eg in _check_path), use it
 	   [[ -n $style_override ]] && style=$__chromatic_attrib_zle[$style_override]
 	   if [[ $isfile == true ]]; then
 	       ((start_file_pos=start_pos+${#arg}-${#arg:t}))
@@ -89,6 +89,7 @@ _parse()
 ## Look for expressions which may be present on any position in the command line
 _check_common_expression()
 {
+    _check_block
     case "$1" in
 	"'"*"'") style="${__chromatic_attrib_zle[comments]}";;
 	'"'*'"') style="${__chromatic_attrib_zle[comments]}"
@@ -98,7 +99,7 @@ _check_common_expression()
 		 ;;
 	'$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}";;
         ')')
-	    ((_blockl[1]>0)) && _block+=("$_blockp[${_blockl[1]}]" "$((end_pos-1)) $end_pos") && ((_blockl[1]--))
+	    ((_blockl[1]>0)) && _block+=("$_blockp[${_blockl[1]}]" "$start_pos $end_pos") && ((_blockl[1]--))
             style="${__chromatic_attrib_zle[functions]}";;
 	'$(('*'))')
 	    style="${__chromatic_attrib_zle[numbers]}"
@@ -314,4 +315,27 @@ _check_file()
     [[ -n "$matched_file:e" ]] && lsstyle="${__chromatic_attrib_zle[*.$matched_file:e]}" && return 0
 
     return 0
+}
+
+
+_check_block()
+{
+	group_open=('qqqq' '[' '{' '[[' 'if' 'case' 'do')
+	group_close=('qqqq' ']' '}' ']]' 'fi' 'esac' 'done')
+
+	group=${(M)group_open:#"$arg"}
+	if [[ -n "$group" ]]; then
+	    i="${group_open[(i)${(q)group}]}"
+echo b x $group y $i
+	    ((_blockl[i]++))
+	    _blockp[${_blockl[i]}]="$start_pos $end_pos"
+	fi
+
+	group=${(M)group_close:#"$arg"}
+	if [[ -n "$group" ]]; then
+	    i="${group_close[(i)${(q)group}]}"
+echo b x $group y $i
+	    ((_blockl[i]>0)) && _block+=("$_blockp[${_blockl[i]}]" "$start_pos $end_pos") && ((_blockl[i]--))
+	fi
+
 }

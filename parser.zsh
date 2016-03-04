@@ -1,3 +1,5 @@
+typeset -A groups
+groups=('(' ')' '[' ']' '{' '}' '[[' ']]' 'if' 'fi' 'case' 'esac' 'do' 'done')
 ## parse the entire command line and build region_highlight array
 _parse()
 {
@@ -10,7 +12,6 @@ _parse()
     typeset -a ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS
     region_highlight=()
     _block=()
-    _blockl=()
     _blockp=()
 
     ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR=(
@@ -98,9 +99,7 @@ _check_common_expression()
 		 substr_color=1
 		 ;;
 	'$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}";;
-        ')')
-	    ((_blockl[1]>0)) && _block+=("$_blockp[${_blockl[1]}]" "$start_pos $end_pos") && ((_blockl[1]--))
-            style="${__chromatic_attrib_zle[functions]}";;
+        ')') style="${__chromatic_attrib_zle[functions]}";;
 	'$(('*'))')
 	    style="${__chromatic_attrib_zle[numbers]}"
 	    _block+=("$start_pos $((start_pos+3))" "$((end_pos-2)) $end_pos");;
@@ -161,10 +160,7 @@ _check_leading_expression()
 		'(('*'))')
 		    style="${__chromatic_attrib_zle[numbers]}"
 		    _block+=("$start_pos $((start_pos+2))" "$((end_pos-2)) $end_pos");;
-		'(')
-		    ((_blockl[1]++))
-		    _blockp[${_blockl[1]}]="$start_pos $end_pos"
-		    style="${__chromatic_attrib_zle[functions]}";;
+		'(') style="${__chromatic_attrib_zle[functions]}";;
 		*) ;;
 	    esac
 	    fi
@@ -317,25 +313,14 @@ _check_file()
     return 0
 }
 
-
 _check_block()
 {
-	group_open=('qqqq' '[' '{' '[[' 'if' 'case' 'do')
-	group_close=('qqqq' ']' '}' ']]' 'fi' 'esac' 'done')
-
-	group=${(M)group_open:#"$arg"}
-	if [[ -n "$group" ]]; then
-	    i="${group_open[(i)${(q)group}]}"
-echo b x $group y $i
-	    ((_blockl[i]++))
-	    _blockp[${_blockl[i]}]="$start_pos $end_pos"
+	if [[ -n ${(Mk)groups:#$arg} ]]; then
+	    _blockp+=("${groups[$arg]}:$start_pos $end_pos")
 	fi
 
-	group=${(M)group_close:#"$arg"}
-	if [[ -n "$group" ]]; then
-	    i="${group_close[(i)${(q)group}]}"
-echo b x $group y $i
-	    ((_blockl[i]>0)) && _block+=("$_blockp[${_blockl[i]}]" "$start_pos $end_pos") && ((_blockl[i]--))
+	if [[ ${${(M)groups:#$arg}:--} == "${_blockp[-1]%:*}" ]]; then
+	    _block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
+	    _blockp=(${_blockp:0:-1})
 	fi
-
 }

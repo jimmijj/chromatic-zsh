@@ -1,5 +1,5 @@
-typeset -A groups
-groups=('(' ')' '[' ']' '{' '}' '[[' ']]' 'if' 'fi' 'case' 'esac' 'do' 'done')
+typeset -A _groups
+_groups=('(' ')' '[' ']' '{' '}' '[[' ']]' 'if' 'fi' 'case' 'esac' 'do' 'done')
 ## parse the entire command line and build region_highlight array
 _parse()
 {
@@ -98,7 +98,10 @@ _check_common_expression()
 		 _zsh_highlight_main_highlighter_highlight_string
 		 substr_color=1
 		 ;;
-	'$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}";;
+	'$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##) style="${__chromatic_attrib_zle[parameters]}";;
+	'${'?##'}')
+	    style="${__chromatic_attrib_zle[parameters]}";
+	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos");;
         ')') style="${__chromatic_attrib_zle[functions]}";;
 	'$(('*'))')
 	    style="${__chromatic_attrib_zle[numbers]}"
@@ -315,11 +318,11 @@ _check_file()
 
 _check_block()
 {
-	if [[ -n ${(Mk)groups:#$arg} ]]; then
-	    _blockp+=("${groups[$arg]}:$start_pos $end_pos")
+	if [[ -n ${(Mk)_groups:#$arg} ]]; then
+	    _blockp+=("${_groups[$arg]}:$start_pos $end_pos")
 	fi
 
-	if [[ ${${(M)groups:#$arg}:--} == "${_blockp[-1]%:*}" ]]; then
+	if [[ ${${(M)_groups:#$arg}:--} == "${_blockp[-1]%:*}" ]]; then
 	    _block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
 	    _blockp=(${_blockp:0:-1})
 	fi

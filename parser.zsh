@@ -1,5 +1,3 @@
-typeset -A _groups
-_groups=('(' ')' '[' ']' '{' '}' '[[' ']]' 'if' 'fi' 'case' 'esac' 'do' 'done')
 ## parse the entire command line and build region_highlight array
 _parse()
 {
@@ -11,6 +9,9 @@ _parse()
     typeset -a ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
     typeset -a ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS
     region_highlight=()
+
+    ## list of complex commands, range of each block, and temporary array for future use
+    _groups=('( )' '[ ]' '{ }' '[[ ]]' 'if fi' 'case esac' 'do done')
     _block=()
     _blockp=()
 
@@ -23,14 +24,12 @@ _parse()
     ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS=(
 	'builtin' 'command' 'exec' 'functions' 'nocorrect' 'noglob' 'type' 'unalias' 'unhash' 'whence' 'where' 'which' 'do'
     )
-    group_tokens=(
-	'(' ')' '$(*)' '&' '&&' '&|' '|&' '&!' '(' ';;' '{'
-    )
 
     # Tokens that are always immediately followed by a command.
     ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS=(
 	$ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR $ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
     )
+
 
     splitbuf1=(${(z)BUFFER})
     splitbuf2=(${(z)BUFFER//$'\n'/ \$\'\\\\n\' }) # ugly hack, but I have no other idea
@@ -66,10 +65,10 @@ _parse()
 	       if [[ "$arg" = "sudo" ]]; then
 		   sudo=true
 	       else
-		   _check_common_expression "$arg" || _check_leading_expression "$arg"
+		   _check_common_expression || _check_leading_expression
 	       fi
 	   else
-	       _check_common_expression "$arg" || _check_subsequent_expression "$arg" || style="${__chromatic_attrib_zle[default]}";
+	       _check_common_expression || _check_subsequent_expression || style="${__chromatic_attrib_zle[default]}";
 	   fi
 
 	   ((isbrace==1&&isbrace++||(isbrace=0)))
@@ -90,8 +89,17 @@ _parse()
 ## Look for expressions which may be present on any position in the command line
 _check_common_expression()
 {
-    _check_block
-    case "$1" in
+    ## Look for complex expressions openning word...
+    if [[ -n ${(M)_groups:#$arg *} ]]; then
+	_blockp+=(${(M)_groups:#$arg *}":$start_pos $end_pos")
+    fi
+    ##... end closing
+    if [[ ${${(M)_groups:#* $arg}:--} == "${_blockp[-1]%:*}" ]]; then
+	_block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
+	_blockp=(${_blockp:0:-1})
+    fi
+
+    case "$arg" in
 	"'"*"'") style="${__chromatic_attrib_zle[comments]}";;
 	'"'*'"') style="${__chromatic_attrib_zle[comments]}"
 		 region_highlight+=("$start_pos $end_pos $style")
@@ -126,9 +134,9 @@ _check_common_expression()
 	';') style="${__chromatic_attrib_zle[separators]}";;
 	*) if _check_path; then
 	       style="${__chromatic_attrib_zle[di]}"
-	   elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$1"} ]]; then
+	   elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
 	       style=$__chromatic_attrib_zle[redirection]
-	   elif [[ $1[0,1] = $histchars[0,1] ]]; then
+	   elif [[ $arg[0,1] = $histchars[0,1] ]]; then
 	       style=$__chromatic_attrib_zle[history-expansion]
 	   else
 	       style="${__chromatic_attrib_zle[default]}"
@@ -141,7 +149,7 @@ _check_common_expression()
 ## Look for a leading expressions
 _check_leading_expression()
 {
-    res=$(LC_ALL=C builtin type -w "$1" 2>/dev/null)
+    res=$(LC_ALL=C builtin type -w "$arg" 2>/dev/null)
     case $res in
 	*': reserved')  style="${__chromatic_attrib_zle[reserved-words]}";;
 	*': alias')     style="${__chromatic_attrib_zle[aliases]}"
@@ -159,7 +167,7 @@ _check_leading_expression()
 	    elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
 		style=$__chromatic_attrib_zle[history-expansion]
 	    else
-	    case "$1" in
+	    case "$arg" in
 		'(('*'))')
 		    style="${__chromatic_attrib_zle[numbers]}"
 		    _block+=("$start_pos $((start_pos+2))" "$((end_pos-2)) $end_pos");;
@@ -174,7 +182,7 @@ _check_leading_expression()
 ## Look for a subsequent expressions
 _check_subsequent_expression()
 {
-    case "$1" in
+    case "$arg" in
 	'--'*|'-'*) style="${__chromatic_attrib_zle[options]}";;
 	'|'|'|&') style="${__chromatic_attrib_zle[pi]}";;
 	'||'|'&&'|'&'|'&|'|'&!'|';;') style="${__chromatic_attrib_zle[separators]}";;
@@ -314,16 +322,4 @@ _check_file()
     [[ -n "$matched_file:e" ]] && lsstyle="${__chromatic_attrib_zle[*.$matched_file:e]}" && return 0
 
     return 0
-}
-
-_check_block()
-{
-	if [[ -n ${(Mk)_groups:#$arg} ]]; then
-	    _blockp+=("${_groups[$arg]}:$start_pos $end_pos")
-	fi
-
-	if [[ ${${(M)_groups:#$arg}:--} == "${_blockp[-1]%:*}" ]]; then
-	    _block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
-	    _blockp=(${_blockp:0:-1})
-	fi
 }

@@ -92,11 +92,17 @@ _check_common_expression()
     ## Look for complex expressions openning word...
     if [[ -n ${(M)_groups:#$arg *} ]]; then
 	_blockp+=(${(M)_groups:#$arg *}":$start_pos $end_pos")
-    fi
+	style="${__chromatic_attrib_zle[reserved-words]}"
+	[[ $arg == '(' ]] && style="${__chromatic_attrib_zle[functions]}"
+	[[ $arg == '{' ]] && isbrace=1
+	return 0
     ##... end closing
-    if [[ ${${(M)_groups:#* $arg}:--} == "${_blockp[-1]%:*}" ]]; then
+    elif [[ ${${(M)_groups:#* $arg}:--} == "${_blockp[-1]%:*}" ]]; then
 	_block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
 	_blockp=(${_blockp:0:-1})
+	style="${__chromatic_attrib_zle[reserved-words]}"
+	[[ $arg == ')' ]] && style="${__chromatic_attrib_zle[functions]}"
+	return 0
     fi
 
     case "$arg" in
@@ -110,7 +116,6 @@ _check_common_expression()
 	'${'?##'}')
 	    style="${__chromatic_attrib_zle[parameters]}";
 	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos");;
-        ')') style="${__chromatic_attrib_zle[functions]}";;
 	'$(('*'))')
 	    style="${__chromatic_attrib_zle[numbers]}"
 	    _block+=("$start_pos $((start_pos+3))" "$((end_pos-2)) $end_pos");;
@@ -127,8 +132,6 @@ _check_common_expression()
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
 	    _block+=("$start_pos $((start_pos+1))" "$((end_pos-1)) $end_pos")
 	    substr_color=1;;
-	'{') isbrace=1; style="${__chromatic_attrib_zle[reserved-words]}";;
-	'}') style="${__chromatic_attrib_zle[reserved-words]}";;
 	?'..'?|[0-9]##'..'[0-9]##'..'[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
 	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[globs]}";;
 	';') style="${__chromatic_attrib_zle[separators]}";;
@@ -171,7 +174,6 @@ _check_leading_expression()
 		'(('*'))')
 		    style="${__chromatic_attrib_zle[numbers]}"
 		    _block+=("$start_pos $((start_pos+2))" "$((end_pos-2)) $end_pos");;
-		'(') style="${__chromatic_attrib_zle[functions]}";;
 		*) ;;
 	    esac
 	    fi

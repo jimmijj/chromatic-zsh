@@ -1,8 +1,9 @@
-- command substitution should be valid at the beginning of the line too
-- add 'in' and ']]' to the reserved words set of colors
-- add brackets to the main style without loss of the context
-- clean the code: get rid of unnecessary array, 
+- add 'in' to the reserved words set of colors
+- clean the code: get rid of unnecessary arrays!
 - remove precommand style
+- add pattern highlight
+- add special characters
+- add many words highlighting in complex commands, like 'then' and 'elif' in if-fi.
 
 - nice feature: separate expansion flags from the parameter, like ${(kv)abc}
 

@@ -94,6 +94,7 @@ _check_common_expression()
 	_blockp+=(${(M)_groups:#$arg *}":$start_pos $end_pos")
 	style="${__chromatic_attrib_zle[reserved-words]}"
 	[[ $arg == '(' ]] && style="${__chromatic_attrib_zle[functions]}"
+	[[ $arg == '[' ]] && style="${__chromatic_attrib_zle[builtins]}"
 	[[ $arg == '{' ]] && isbrace=1
 	return 0
     ##... end closing
@@ -102,6 +103,7 @@ _check_common_expression()
 	_blockp=(${_blockp:0:-1})
 	style="${__chromatic_attrib_zle[reserved-words]}"
 	[[ $arg == ')' ]] && style="${__chromatic_attrib_zle[functions]}"
+	[[ $arg == ']' ]] && style="${__chromatic_attrib_zle[builtins]}"
 	return 0
     fi
 

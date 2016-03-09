@@ -3,15 +3,16 @@ _parse()
 {
     emulate -L zsh
     setopt localoptions extendedglob bareglobqual
-    local start_pos=0 end_pos highlight_glob=true new_expression=true arg style lsstyle start_file_pos end_file_pos sudo=false sudo_arg=false isbrace=0
+    local start_pos=0 end_pos highlight_glob=true isleading=1 nextleading=0 arg style lsstyle start_file_pos end_file_pos sudo=false sudo_arg=false isbrace=0
     typeset -a ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR
     typeset -a ZSH_HIGHLIGHT_TOKENS_REDIRECTION
     typeset -a ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
     typeset -a ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS
     region_highlight=()
 
-    ## list of complex commands, range of each block, and temporary array for future use
-    _groups=('(,)' '[,]' '{,}' '[[,]]' 'if,then,elif,else,fi' 'case,in,esac' 'for,in,do,done' 'while,do,done')
+    ## list of complex commands, numbers means: 1 - match only on leading position, 0 - anywhere
+    _groups=('0 (,)' '0 [,]' '0 {,}' '0 [[,]]' '1 if,then,elif,else,fi' '1 case,in,esac' '1 for,in,do,done' '1 while,do,done')
+    ## range of each block, and temporary array for future use
     _block=()
     _blockp=()
 
@@ -22,7 +23,7 @@ _parse()
 	'<' '<>' '>' '>|' '>!' '>>' '>>|' '>>!' '<<' '<<-' '<<<' '<&' '>&' '<& -' '>& -' '<& p' '>& p' '&>' '>&|' '>&!' '&>|' '&>!' '>>&' '&>>' '>>&|' '>>&!' '&>>|' '&>>!'
     )
     ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS=(
-	'builtin' 'command' 'exec' 'functions' 'nocorrect' 'noglob' 'type' 'unalias' 'unhash' 'whence' 'where' 'which' 'do'
+	'builtin' 'command' 'exec' 'functions' 'nocorrect' 'noglob' 'type' 'unalias' 'unhash' 'whence' 'where' 'which' 'if' 'then' 'elif' 'else' 'do'
     )
 
     # Tokens that are always immediately followed by a command.
@@ -36,9 +37,9 @@ _parse()
     local argnum=0
     for arg in ${(z)${(z)BUFFER}}; do
 	((argnum++))
-	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && new_expression=true && continue
+	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && nextleading=1 && continue
 
-	   local substr_color=0 isfile=false isgroup=0
+	   local substr_color=0 isfile=1 isgroup=0
 	   local style_override=""
 	   [[ $start_pos -eq 0 && $arg = 'noglob' ]] && highlight_glob=false
 	   ((start_pos+=${#BUFFER[$start_pos+1,-1]}-${#${BUFFER[$start_pos+1,-1]##[[:space:]]#}}))
@@ -55,12 +56,13 @@ _parse()
 				    sudo_arg=false
 				else
 				    sudo=false
-				    new_expression=true
+				    nextleading=0
 				fi
 				;;
 	       esac
 	   fi
-	   if $new_expression; then
+	   if ((isleading)); then
+	       nextleading=0
 	       if [[ "$arg" = "sudo" ]]; then
 		   sudo=true
 	       else
@@ -73,15 +75,16 @@ _parse()
 	   ((isbrace==1&&isbrace++||(isbrace=0)))
 	   # if a style_override was set (eg in _check_path), use it
 	   [[ -n $style_override ]] && style=$__chromatic_attrib_zle[$style_override]
-	   if [[ $isfile == true ]]; then
+	   if ((isfile)); then
 	       ((start_file_pos=start_pos+${#arg}-${#arg:t}))
 	       end_file_pos=$end_pos
 	       ((end_pos=end_pos-${#arg:t}))
 	       region_highlight+=("$start_file_pos $end_file_pos $lsstyle")
 	   fi
 	   [[ $substr_color = 0 ]] && region_highlight+=("$start_pos $end_pos $style")
-	   [[ -z ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && new_expression=false
-	   [[ $isfile == true ]] && start_pos=$end_file_pos || start_pos=$end_pos
+	   [[ $isleading == 1 && -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && nextleading=1
+	   ((isfile)) && start_pos=$end_file_pos || start_pos=$end_pos
+	   isleading=$nextleading
     done
 }
 
@@ -89,22 +92,30 @@ _parse()
 _check_common_expression()
 {
     ## Look for complex expressions openning word...
-    if [[ -n ${(M)_groups:#$arg,*} ]]; then
-	_blockp+=(${(M)_groups:#$arg,*}":$start_pos $end_pos")
-	style="${__chromatic_attrib_zle[reserved-words]}"
-	[[ $arg == '(' ]] && style="${__chromatic_attrib_zle[functions]}"
-	[[ $arg == '[' ]] && style="${__chromatic_attrib_zle[builtins]}"
-	[[ $arg == '{' ]] && isbrace=1
-	return 0
-    ##... end closing
+    if [[ -n ${(M)_groups:#* $arg,*} ]]; then
+	if [[ ${${(M)_groups:#* $arg,*}% *} == 1 && $isleading == 1 ]]; then
+	    echo $arg x
+	    _blockp+=(${(M)_groups:#* $arg,*}":$start_pos $end_pos")
+	    style="${__chromatic_attrib_zle[reserved-words]}"
+	    [[ $arg == '(' ]] && style="${__chromatic_attrib_zle[functions]}"
+	    [[ $arg == '[' ]] && style="${__chromatic_attrib_zle[builtins]}"
+	    return 0
+	elif [[ -z $PWD ]]; then
+	    [[ $arg == '{' ]] && isbrace=1 && style="${__chromatic_attrib_zle[reserved-words]}"
+	    return 0
+	fi
+    ##... end closing...
     elif [[ -n ${(M)${(M)_groups:#*,$arg}:#${_blockp[-1]%:*}} ]]; then
+	echo $arg d
 	_block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
 	_blockp=(${_blockp:0:-1})
 	style="${__chromatic_attrib_zle[reserved-words]}"
 	[[ $arg == ')' ]] && style="${__chromatic_attrib_zle[functions]}"
 	[[ $arg == ']' ]] && style="${__chromatic_attrib_zle[builtins]}"
 	return 0
+    ##... or in the middle.
     elif [[ -n ${(M)${(M)_groups:#*,$arg,*}:#${_blockp[-1]%:*}} ]]; then
+echo $arg po
 	_block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
 	style="${__chromatic_attrib_zle[reserved-words]}"
 	return 0
@@ -139,7 +150,7 @@ _check_common_expression()
 	    substr_color=1;;
 	?'..'?|[0-9]##'..'[0-9]##'..'[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
 	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[glob]}";;
-	';') new_expression=true; style="${__chromatic_attrib_zle[separators]}";;
+	';') nextleading=1; style="${__chromatic_attrib_zle[separators]}";;
 	*) if _check_path; then
 	       style="${__chromatic_attrib_zle[di]}"
 	   elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
@@ -149,7 +160,7 @@ _check_common_expression()
 	   else
 	       style="${__chromatic_attrib_zle[default]}"
 	   fi
-	   _check_file && isfile=true
+	   _check_file && isfile=1
 	   ;;
     esac
 }
@@ -169,7 +180,7 @@ _check_leading_expression()
 	*)
             if [[ $arg == [a-zA-Z0-9_]##(|\[*\])=* ]]; then
 		style="${__chromatic_attrib_zle[parameters]}"
-		new_expression=true
+		nextleading=1
 	    elif _check_command; then
 		style=$__chromatic_attrib_zle[command_prefix]
 	    elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
@@ -192,10 +203,10 @@ _check_subsequent_expression()
     case "$arg" in
 	'--'*|'-'*) style="${__chromatic_attrib_zle[options]}";;
 	'|'|'|&')
-	    new_expression=true
+	    nextleading=1
 	    style="${__chromatic_attrib_zle[pi]}";;
 	'||'|'&&'|'&'|'&|'|'&!'|';;')
-	    new_expression=true
+	    nextleading=1
 	    style="${__chromatic_attrib_zle[separators]}";;
 	'<('*')'|'>('*')'|'=('*')')
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[cd]}")

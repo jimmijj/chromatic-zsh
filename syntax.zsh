@@ -16,7 +16,7 @@ fi
 
     region_highlight=("${region_highlight_copy[@]}")
     for ts bs te be in ${(zkv)_block}; do
-	(((CURSOR>=ts&&CURSOR<bs)||(CURSOR>te&&CURSOR<=be))) && region_highlight+=("$ts $bs ${__chromatic_attrib_zle[suffix]}" "$te $be ${__chromatic_attrib_zle[suffix]}")
+	(((CURSOR>=ts&&CURSOR<bs)||(CURSOR>te&&CURSOR<=be))) && region_highlight+=("$ts $bs ${__chromatic_attrib_zle[block]}" "$te $be ${__chromatic_attrib_zle[block]}")
     done
     
     ((REGION_ACTIVE)) && region_highlight+=("$((CURSOR < MARK ? CURSOR : MARK)) $((CURSOR > MARK ? CURSOR : MARK)) ${${(M)zle_highlight[@]:#region*}#region:}")

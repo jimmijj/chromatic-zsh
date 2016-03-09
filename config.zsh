@@ -11,7 +11,8 @@ __chromatic_attrib=(
     defaults       '0'
     files          '0'
     functions      '33'
-    globs          '34'
+    glob           '34'
+    block          '46'
     manuals        '32'
     numbers        '2;36'
     options        '36'
@@ -19,12 +20,13 @@ __chromatic_attrib=(
     process-ids    '1;31'
     process-names  '1;33'
     region         '44'
+    redirection    '35'
     reserved-words '31'
     search-line    '37'
     search-pattern '1;33;41'
     separators     '35'
     special        '36'
-    suffix         '46'
+    suffix         '1'
 )
 
 if [[ "$ncolors" == 256 ]]; then

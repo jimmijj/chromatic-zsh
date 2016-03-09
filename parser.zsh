@@ -11,7 +11,7 @@ _parse()
     region_highlight=()
 
     ## list of complex commands, range of each block, and temporary array for future use
-    _groups=('( )' '[ ]' '{ }' '[[ ]]' 'if fi' 'case esac' 'do done')
+    _groups=('(,)' '[,]' '{,}' '[[,]]' 'if,then,elif,else,fi' 'case,in,esac' 'for,in,do,done' 'while,do,done')
     _block=()
     _blockp=()
 
@@ -61,7 +61,6 @@ _parse()
 	       esac
 	   fi
 	   if $new_expression; then
-	       new_expression=false
 	       if [[ "$arg" = "sudo" ]]; then
 		   sudo=true
 	       else
@@ -81,7 +80,7 @@ _parse()
 	       region_highlight+=("$start_file_pos $end_file_pos $lsstyle")
 	   fi
 	   [[ $substr_color = 0 ]] && region_highlight+=("$start_pos $end_pos $style")
-	   [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && new_expression=true
+	   [[ -z ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && new_expression=false
 	   [[ $isfile == true ]] && start_pos=$end_file_pos || start_pos=$end_pos
     done
 }
@@ -90,20 +89,24 @@ _parse()
 _check_common_expression()
 {
     ## Look for complex expressions openning word...
-    if [[ -n ${(M)_groups:#$arg *} ]]; then
-	_blockp+=(${(M)_groups:#$arg *}":$start_pos $end_pos")
+    if [[ -n ${(M)_groups:#$arg,*} ]]; then
+	_blockp+=(${(M)_groups:#$arg,*}":$start_pos $end_pos")
 	style="${__chromatic_attrib_zle[reserved-words]}"
 	[[ $arg == '(' ]] && style="${__chromatic_attrib_zle[functions]}"
 	[[ $arg == '[' ]] && style="${__chromatic_attrib_zle[builtins]}"
 	[[ $arg == '{' ]] && isbrace=1
 	return 0
     ##... end closing
-    elif [[ ${${(M)_groups:#* $arg}:--} == "${_blockp[-1]%:*}" ]]; then
+    elif [[ -n ${(M)${(M)_groups:#*,$arg}:#${_blockp[-1]%:*}} ]]; then
 	_block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
 	_blockp=(${_blockp:0:-1})
 	style="${__chromatic_attrib_zle[reserved-words]}"
 	[[ $arg == ')' ]] && style="${__chromatic_attrib_zle[functions]}"
 	[[ $arg == ']' ]] && style="${__chromatic_attrib_zle[builtins]}"
+	return 0
+    elif [[ -n ${(M)${(M)_groups:#*,$arg,*}:#${_blockp[-1]%:*}} ]]; then
+	_block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
+	style="${__chromatic_attrib_zle[reserved-words]}"
 	return 0
     fi
 
@@ -135,8 +138,8 @@ _check_common_expression()
 	    _block+=("$start_pos $((start_pos+1))" "$((end_pos-1)) $end_pos")
 	    substr_color=1;;
 	?'..'?|[0-9]##'..'[0-9]##'..'[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
-	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[globs]}";;
-	';') style="${__chromatic_attrib_zle[separators]}";;
+	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[glob]}";;
+	';') new_expression=true; style="${__chromatic_attrib_zle[separators]}";;
 	*) if _check_path; then
 	       style="${__chromatic_attrib_zle[di]}"
 	   elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
@@ -188,8 +191,12 @@ _check_subsequent_expression()
 {
     case "$arg" in
 	'--'*|'-'*) style="${__chromatic_attrib_zle[options]}";;
-	'|'|'|&') style="${__chromatic_attrib_zle[pi]}";;
-	'||'|'&&'|'&'|'&|'|'&!'|';;') style="${__chromatic_attrib_zle[separators]}";;
+	'|'|'|&')
+	    new_expression=true
+	    style="${__chromatic_attrib_zle[pi]}";;
+	'||'|'&&'|'&'|'&|'|'&!'|';;')
+	    new_expression=true
+	    style="${__chromatic_attrib_zle[separators]}";;
 	'<('*')'|'>('*')'|'=('*')')
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[cd]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[cd]}")

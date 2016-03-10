@@ -39,7 +39,7 @@ _parse()
 	((argnum++))
 	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && nextleading=1 && continue
 
-	   local substr_color=0 isfile=1 isgroup=0
+	   local substr_color=0 isfile=0 isgroup=0
 	   local style_override=""
 	   [[ $start_pos -eq 0 && $arg = 'noglob' ]] && highlight_glob=false
 	   ((start_pos+=${#BUFFER[$start_pos+1,-1]}-${#${BUFFER[$start_pos+1,-1]##[[:space:]]#}}))
@@ -93,20 +93,26 @@ _check_common_expression()
 {
     ## Look for complex expressions openning word...
     if [[ -n ${(M)_groups:#* $arg,*} ]]; then
-	if [[ ${${(M)_groups:#* $arg,*}% *} == 1 && $isleading == 1 ]]; then
-	    echo $arg x
-	    _blockp+=(${(M)_groups:#* $arg,*}":$start_pos $end_pos")
-	    style="${__chromatic_attrib_zle[reserved-words]}"
-	    [[ $arg == '(' ]] && style="${__chromatic_attrib_zle[functions]}"
-	    [[ $arg == '[' ]] && style="${__chromatic_attrib_zle[builtins]}"
-	    return 0
-	elif [[ -z $PWD ]]; then
-	    [[ $arg == '{' ]] && isbrace=1 && style="${__chromatic_attrib_zle[reserved-words]}"
-	    return 0
+	if [[ $isleading == 1 ]]; then
+		_blockp+=(${(M)_groups:#* $arg,*}":$start_pos $end_pos")
+		style="${__chromatic_attrib_zle[reserved-words]}"
+		[[ $arg == '(' ]] && style="${__chromatic_attrib_zle[functions]}"
+		[[ $arg == '[' ]] && style="${__chromatic_attrib_zle[builtins]}"
+		[[ $arg == '{' ]] && isbrace=1
+		return 0
+	else
+	    if [[ ${${(M)_groups:#* $arg,*}% *} == 0 ]]; then
+		_blockp+=(${(M)_groups:#* $arg,*}":$start_pos $end_pos")
+		style="${__chromatic_attrib_zle[default]}"
+		[[ $arg == '{' ]] && isbrace=1 && style="${__chromatic_attrib_zle[reserved-words]}"
+		return 0
+	    else
+		style="${__chromatic_attrib_zle[default]}"
+		return 0
+	    fi
 	fi
     ##... end closing...
     elif [[ -n ${(M)${(M)_groups:#*,$arg}:#${_blockp[-1]%:*}} ]]; then
-	echo $arg d
 	_block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
 	_blockp=(${_blockp:0:-1})
 	style="${__chromatic_attrib_zle[reserved-words]}"
@@ -115,7 +121,6 @@ _check_common_expression()
 	return 0
     ##... or in the middle.
     elif [[ -n ${(M)${(M)_groups:#*,$arg,*}:#${_blockp[-1]%:*}} ]]; then
-echo $arg po
 	_block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
 	style="${__chromatic_attrib_zle[reserved-words]}"
 	return 0

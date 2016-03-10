@@ -1,10 +1,27 @@
-- add 'in' to the reserved words set of colors
 - clean the code: get rid of unnecessary arrays!
 - remove precommand style
 - add pattern highlight
 - add special characters
-- add many words highlighting in complex commands, like 'then' and 'elif' in if-fi.
-
 - nice feature: separate expansion flags from the parameter, like ${(kv)abc}
-
 - biger challange: loop over nested sub-words (double quotes, command-, process-substitution, subshells).
+
+====
+I consider block matching as complete, although some edge cases still don't work, e.g.:
+
+$ echo [ a ] b
+
+Highlights ']' although shouldn't.
+
+$ for ((x=0;x<3;x++)) echo $x; echo Work is done
+
+Highlights and match final 'done' with initial 'for', although shouldn't do neither
+Also 'echo' is not highlighted, but that is not related to a block matching part.
+
+$ { for ((x=0;x<3;x++)) echo $x }; echo Work is done
+
+Neither highlight nor match '}' with '{', and treats 'done' as in previous example
+
+
+Most probably I won't correct these issues.
+Parsing command line has some limits: checking each additional condition costs cpu resources (time) and the benefit is marginal.
+All typical cases should work correctly.

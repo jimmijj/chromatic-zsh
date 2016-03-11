@@ -7,20 +7,28 @@ _search()
 ## Next rebuilt dynamically region_highlight on any buffer event
 _syntax()
 {
+    ## Run parser if buffer has changed
     if [[ "$BUFFER" != "$_lastbuffer" ]]; then
 	_parse
 	region_highlight_copy=("${region_highlight[@]}")
-fi
-#   elif ((CURSOR!=_lastcursor)); then
- #   fi
+    fi
+    #   elif ((CURSOR!=_lastcursor)); then
+    #   fi
 
+    ## Restore saved region_highlight (it could have been changed if the cursor has moved)
     region_highlight=("${region_highlight_copy[@]}")
+
+    ## Highlight cursor
+    region_highlight+=("$CURSOR $(($CURSOR+1)) standout")
+
+    ## Highlight complex commands if cursor is on their position
     for ts bs te be in ${(zkv)_block}; do
 	(((CURSOR>=ts&&CURSOR<bs)||(CURSOR>te&&CURSOR<=be))) && region_highlight+=("$ts $bs ${__chromatic_attrib_zle[block]}" "$te $be ${__chromatic_attrib_zle[block]}")
     done
-    
+
+    ## Bring back region higlighting from zle_highlight array (was overwriten by region_highlight)
     ((REGION_ACTIVE)) && region_highlight+=("$((CURSOR < MARK ? CURSOR : MARK)) $((CURSOR > MARK ? CURSOR : MARK)) ${${(M)zle_highlight[@]:#region*}#region:}")
-    
+
     _lastbuffer="$BUFFER"; _lastcursor="$CURSOR"
 }
 

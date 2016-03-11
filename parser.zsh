@@ -61,6 +61,8 @@ _parse()
 				;;
 	       esac
 	   fi
+
+	   style="${__chromatic_attrib_zle[default]}"
 	   if ((isleading)); then
 	       nextleading=0
 	       if [[ "$arg" = "sudo" ]]; then
@@ -69,7 +71,7 @@ _parse()
 		   _check_common_expression || _check_leading_expression
 	       fi
 	   else
-	       _check_common_expression || _check_subsequent_expression || style="${__chromatic_attrib_zle[default]}";
+	       _check_common_expression || _check_subsequent_expression
 	   fi
 
 	   ((isbrace==1&&isbrace++||(isbrace=0)))
@@ -91,36 +93,31 @@ _parse()
 ## Look for expressions which may be present on any position in the command line
 _check_common_expression()
 {
-    ## Look for complex expressions openning word...
+    ## Look for complex expressions - openning word...
     if [[ -n ${(M)_groups:#* $arg,*} ]]; then
-	if [[ $isleading == 1 ]]; then
+	if ((isleading)); then
 		_blockp+=(${(M)_groups:#* $arg,*}":$start_pos $end_pos")
 		style="${__chromatic_attrib_zle[reserved-words]}"
 		[[ $arg == '(' ]] && style="${__chromatic_attrib_zle[functions]}"
 		[[ $arg == '[' ]] && style="${__chromatic_attrib_zle[builtins]}"
 		[[ $arg == '{' ]] && isbrace=1
-		return 0
-	else
-	    if [[ ${${(M)_groups:#* $arg,*}% *} == 0 ]]; then
-		_blockp+=(${(M)_groups:#* $arg,*}":$start_pos $end_pos")
-		style="${__chromatic_attrib_zle[default]}"
-		[[ $arg == '{' ]] && isbrace=1 && style="${__chromatic_attrib_zle[reserved-words]}"
-		return 0
-	    else
-		style="${__chromatic_attrib_zle[default]}"
-		return 0
-	    fi
+	elif [[ ${${(M)_groups:#* $arg,*}% *} == 0 ]]; then
+	    _blockp+=(${(M)_groups:#* $arg,*}":$start_pos $end_pos")
+	    [[ $arg == '{' ]] && isbrace=1 && style="${__chromatic_attrib_zle[reserved-words]}"
 	fi
-    ##... end closing...
-    elif [[ -n ${(M)${(M)_groups:#*,$arg}:#${_blockp[-1]%:*}} ]]; then
-	_block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
-	_blockp=(${_blockp:0:-1})
-	style="${__chromatic_attrib_zle[reserved-words]}"
-	[[ $arg == ')' ]] && style="${__chromatic_attrib_zle[functions]}"
-	[[ $arg == ']' ]] && style="${__chromatic_attrib_zle[builtins]}"
+	return 0
+    ##... or closing...
+    elif [[ -n ${(M)_blockp[-1]:#*,$arg:*} ]]; then
+	if ((${_blockp[-1]%% *}<=isleading)); then
+	    _block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
+	    _blockp=(${_blockp:0:-1})
+	    style="${__chromatic_attrib_zle[reserved-words]}"
+	    [[ $arg == ')' ]] && style="${__chromatic_attrib_zle[functions]}"
+	    [[ $arg == ']' ]] && style="${__chromatic_attrib_zle[builtins]}"
+	fi
 	return 0
     ##... or in the middle.
-    elif [[ -n ${(M)${(M)_groups:#*,$arg,*}:#${_blockp[-1]%:*}} ]]; then
+    elif [[ -n ${(M)_blockp[-1]:#*,$arg,*} ]]; then
 	_block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
 	style="${__chromatic_attrib_zle[reserved-words]}"
 	return 0

@@ -32,12 +32,12 @@ _parse()
     )
 
 
-    splitbuf1=(${(z)BUFFER})
-    splitbuf2=(${(z)BUFFER//$'\n'/ \$\'\\\\n\' }) # ugly hack, but I have no other idea
+    splitbuf1=(${(z)${(z)BUFFER}})
+    splitbuf2=(${(z)${(z)BUFFER//$'\n'/ \$\'\\\\n\' }}) # ugly hack, but I have no better idea
     local argnum=0
     for arg in ${(z)${(z)BUFFER}}; do
 	((argnum++))
-	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && nextleading=1 && continue
+	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && isleading=1 && continue
 
 	   local substr_color=0 isfile=0 isgroup=0
 	   local style_override=""

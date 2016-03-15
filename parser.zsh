@@ -235,7 +235,7 @@ _check_path()
 	local -a tmp
 	# got a path prefix?
 	tmp=( ${expanded_path}*(N) )
-	(( $#tmp > 0 )) && style_override=path_prefix && : _zsh_highlight_main_highlighter_predicate_switcher bc && return 0
+	(( $#tmp > 0 )) && style_override=path && : _zsh_highlight_main_highlighter_predicate_switcher bc && return 0
     fi
     return 1
 }

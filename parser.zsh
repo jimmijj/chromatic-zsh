@@ -23,7 +23,7 @@ _parse()
 	'<' '<>' '>' '>|' '>!' '>>' '>>|' '>>!' '<<' '<<-' '<<<' '<&' '>&' '<& -' '>& -' '<& p' '>& p' '&>' '>&|' '>&!' '&>|' '&>!' '>>&' '&>>' '>>&|' '>>&!' '&>>|' '&>>!'
     )
     ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS=(
-	'builtin' 'command' 'exec' 'functions' 'nocorrect' 'noglob' 'type' 'unalias' 'unhash' 'whence' 'where' 'which' 'if' 'then' 'elif' 'else' 'do'
+	'builtin' 'command' 'exec' 'functions' 'nocorrect' 'noglob' 'type' 'unalias' 'unhash' 'whence' 'where' 'which' 'if' 'then' 'elif' 'else' 'do' 'while'
     )
 
     # Tokens that are always immediately followed by a command.

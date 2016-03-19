@@ -153,9 +153,7 @@ _check_common_expression()
 	?'..'?|[0-9]##'..'[0-9]##'..'[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
 	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[glob]}";;
 	';') nextleading=1; style="${__chromatic_attrib_zle[separators]}";;
-	*) if _check_path; then
-	       style="${__chromatic_attrib_zle[di]}"
-	   elif [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
+	*) if [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
 	       style=$__chromatic_attrib_zle[redirection]
 	   elif [[ $arg[0,1] = $histchars[0,1] ]]; then
 	       style=$__chromatic_attrib_zle[history-expansion]
@@ -216,28 +214,6 @@ _check_subsequent_expression()
 	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos")
 	    substr_color=1;;
     esac
-}
-
-## Check if the argument is a path
-_check_path()
-{
-    setopt localoptions nonomatch
-    local expanded_path; : ${expanded_path:=${(Q)~arg}}
-    [[ -z $expanded_path ]] && return 1
-    [[ -e $expanded_path ]] && return 0
-    # Search the path in CDPATH
-    local cdpath_dir
-    for cdpath_dir in $cdpath ; do
-	[[ -e "$cdpath_dir/$expanded_path" ]] && return 0
-    done
-    [[ ! -e ${expanded_path:h} ]] && return 1
-    if [[ ${BUFFER[1]} != "-" && ${#LBUFFER} == $end_pos ]]; then
-	local -a tmp
-	# got a path prefix?
-	tmp=( ${expanded_path}*(N) )
-	(( $#tmp > 0 )) && style_override=path && : _zsh_highlight_main_highlighter_predicate_switcher bc && return 0
-    fi
-    return 1
 }
 
 # Highlight special chars inside double-quoted strings
@@ -316,15 +292,15 @@ _check_file()
 
     expanded_arg=${(Q)~arg}
     [[ -z "$expanded_arg" ]] && return 1
-    [[ -d "$expanded_arg" ]] && return 1
-    [[ "${BUFFER[1]}" != "-" && "${#LBUFFER}" == "$end_pos" ]] && matched_file=("${expanded_arg}"*(Noa^/[1]))
+    [[ "${BUFFER[1]}" != "-" && "${#LBUFFER}" == "$end_pos" ]] && matched_file=("${expanded_arg}"*(Noa[1]))
     [[ -e "$expanded_arg" || -e "$matched_file" ]] && lsstyle=none || return 1
+    [[ "$expanded_arg" != "$expanded_arg:t" ]] && style="${__chromatic_attrib_zle[di]}";
     [[ -e "$matched_file" ]] && : _zsh_highlight_main_highlighter_predicate_switcher bc
 
     [[ ! -z "${__chromatic_attrib_zle[file]}" ]] && lsstyle="${__chromatic_attrib_zle[file]}" && return 0
 
     # [[ rs ]]
-    # [[ -d $expanded_arg || -d $matched_file ]] && lsstyle=$__chromatic_attrib_zle[di] && return 0
+    [[ -d "$expanded_arg" || -d "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[di]}" && return 0
     [[ -h "$expanded_arg" || -h "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[ln]}" && return 0
     # [[ mh ]]
     [[ -p "$expanded_arg" || -p "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[pi]}" && return 0

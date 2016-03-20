@@ -292,12 +292,15 @@ _check_file()
     [[ "${BUFFER[1]}" != "-" && "${#LBUFFER}" == "$end_pos" ]] && matched_file=("${expanded_arg}"*(Noa[1]))
     [[ -e "$expanded_arg" || -e "$matched_file" ]] && lsstyle=none || return 1
     [[ "$expanded_arg" != "$expanded_arg:t" ]] && style="${__chromatic_attrib_zle[di]}";
+    [[ ! -e "$expanded_arg" && -e "$matched_file" ]] && style="${__chromatic_attrib_zle[path]}";
+
     [[ -e "$matched_file" ]] && : _zsh_highlight_main_highlighter_predicate_switcher bc
 
     [[ ! -z "${__chromatic_attrib_zle[file]}" ]] && lsstyle="${__chromatic_attrib_zle[file]}" && return 0
 
     # [[ rs ]]
-    [[ -d "$expanded_arg" || -d "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[di]}" && return 0
+    [[ -d "$expanded_arg" ]] && lsstyle="${__chromatic_attrib_zle[di]}" && return 0
+    [[ -d "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[path]}" && return 0
     [[ -h "$expanded_arg" || -h "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[ln]}" && return 0
     # [[ mh ]]
     [[ -p "$expanded_arg" || -p "$matched_file" ]] && lsstyle="${__chromatic_attrib_zle[pi]}" && return 0

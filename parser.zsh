@@ -40,7 +40,6 @@ _parse()
 	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && isleading=1 && continue
 
 	   local substr_color=0 isfile=0 isgroup=0
-	   local style_override=""
 	   [[ $start_pos -eq 0 && $arg = 'noglob' ]] && highlight_glob=false
 	   ((start_pos+=${#BUFFER[$start_pos+1,-1]}-${#${BUFFER[$start_pos+1,-1]##[[:space:]]#}}))
 	   ((end_pos=$start_pos+${#arg}))
@@ -75,8 +74,6 @@ _parse()
 	   fi
 
 	   ((isbrace==1&&isbrace++||(isbrace=0)))
-	   # if a style_override was set (eg in _check_path), use it
-	   [[ -n $style_override ]] && style=$__chromatic_attrib_zle[$style_override]
 	   if ((isfile)); then
 	       ((start_file_pos=start_pos+${#arg}-${#arg:t}))
 	       end_file_pos=$end_pos

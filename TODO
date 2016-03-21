@@ -1,9 +1,10 @@
 - clean the code: get rid of unnecessary arrays!
 - remove precommand style
 - add pattern highlight
-- add special characters
+- expand special characters
 - nice feature: separate expansion flags from the parameter, like ${(kv)abc}
 - biger challange: loop over nested sub-words (double quotes, command-, process-substitution, subshells).
+
 
 ====
 I consider block matching as complete, although some edge cases still don't work, e.g.:

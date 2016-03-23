@@ -39,7 +39,7 @@ _parse()
 	((argnum++))
 	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && isleading=1 && continue
 
-	   local substr_color=0 isfile=0 isgroup=0
+	   local issubstring=0 isfile=0 isgroup=0
 	   [[ $start_pos -eq 0 && $arg = 'noglob' ]] && highlight_glob=false
 	   ((start_pos+=${#BUFFER[$start_pos+1,-1]}-${#${BUFFER[$start_pos+1,-1]##[[:space:]]#}}))
 	   ((end_pos=$start_pos+${#arg}))
@@ -80,7 +80,7 @@ _parse()
 	       ((end_pos=end_pos-${#arg:t}))
 	       region_highlight+=("$start_file_pos $end_file_pos $lsstyle")
 	   fi
-	   [[ $substr_color = 0 ]] && region_highlight+=("$start_pos $end_pos $style")
+	   ((issubstring==0)) && region_highlight+=("$start_pos $end_pos $style")
 	   [[ $isleading == 1 && -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && nextleading=1
 	   ((isfile)) && start_pos=$end_file_pos || start_pos=$end_pos
 	   isleading=$nextleading
@@ -122,11 +122,12 @@ _check_common_expression()
 
     case "$arg" in
 	"'"*"'") style="${__chromatic_attrib_zle[comments]}";;
-	'"'*'"') style="${__chromatic_attrib_zle[comments]}"
-		 region_highlight+=("$start_pos $end_pos $style")
-		 _zsh_highlight_main_highlighter_highlight_string
-		 substr_color=1
-		 ;;
+	'"'*'"')
+	    style="${__chromatic_attrib_zle[comments]}"
+	    region_highlight+=("$start_pos $end_pos $style")
+	    _substring
+	    issubstring=1
+	    ;;
 	'$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##) style="${__chromatic_attrib_zle[parameters]}";;
 	'${'?##'}')
 	    style="${__chromatic_attrib_zle[parameters]}";
@@ -141,12 +142,12 @@ _check_common_expression()
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
 	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos")
-	    substr_color=1;;
+	    issubstring=1;;
 	'`'*'`')
 	    region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle[builtins]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
 	    _block+=("$start_pos $((start_pos+1))" "$((end_pos-1)) $end_pos")
-	    substr_color=1;;
+	    issubstring=1;;
 	?'..'?|[0-9]##'..'[0-9]##'..'[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
 	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[glob]}";;
 	';') nextleading=1; style="${__chromatic_attrib_zle[separators]}";;
@@ -155,9 +156,8 @@ _check_common_expression()
 	   elif [[ $arg[0,1] = $histchars[0,1] ]]; then
 	       style=$__chromatic_attrib_zle[history-expansion]
 	   else
-	       style="${__chromatic_attrib_zle[default]}"
+	       _check_file && isfile=1
 	   fi
-	   _check_file && isfile=1
 	   ;;
     esac
 }
@@ -209,42 +209,34 @@ _check_subsequent_expression()
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[cd]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[cd]}")
 	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos")
-	    substr_color=1;;
+	    issubstring=1;;
     esac
 }
 
-# Highlight special chars inside double-quoted strings
-_zsh_highlight_main_highlighter_highlight_string()
+## Highlight selected atoms inside double-quoted string
+_substring()
 {
-    setopt localoptions extendedglob noksharrays
-    local i j k style varflag str_start str_end
+    setopt localoptions extendedglob
+    local str_start str_end
     ((str_start=start_pos+1)); str_end=0
     for substr in "${(Qz)arg}"; do
 	((str_start+=${#BUFFER[$str_start+1,-1]}-${#${BUFFER[$str_start+1,-1]##[[:space:]]#}}))
 	((str_end=str_start+${#substr}))
 	case "$substr" in
-	    '$(('*'))') style="${__chromatic_attrib_zle[numbers]}"
-			region_highlight+=("$str_start $str_end $style")
-			;;
-	    '$('*')') style="${__chromatic_attrib_zle[builtins]}"
-		      region_highlight+=("$str_start $str_end $style")
-		      ;;
-	    '`'*'`') style="${__chromatic_attrib_zle[builtins]}"
-		      region_highlight+=("$str_start $str_end $style")
-		      ;;
-	    '$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') style="${__chromatic_attrib_zle[parameters]}"
-							   region_highlight+=("$str_start $str_end $style")
-							   ;;
-	    *\\[[:xdigit:]]*)
-		[[ $substr =~ \\\\[[:xdigit:]] ]] && {
-printf '%s\n' "e $substr $MATCH"
-		style="${__chromatic_attrib_zle[special]}"
-		region_highlight+=("$((str_start+MBEGIN-1)) $((str_start+MEND)) $style")
-		}
-		;;
+	    '$(('*'))') region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[numbers]}");;
+	    '$('*')') region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[builtins]}");;
+	    '`'*'`') region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[builtins]}");;
+	    '$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[parameters]}");;
+	    *\\[[:xdigit:]UXnrtuvx]*) _check_xdigit "$substr";;
 	esac
 	str_start="$str_end"
     done
+}
+
+## Look for hexadecimal digit
+_check_xdigit()
+{
+    [[ $1 =~ (.*)(\\\\[[:xdigit:]UXnrtuvx]) ]] && region_highlight+=("$((str_start+mbegin[2]-1)) $((str_start+mend[2])) ${__chromatic_attrib_zle[special]}") && "$0" "${match[1]}"
 }
  
 ## Check if command with given prefix exists

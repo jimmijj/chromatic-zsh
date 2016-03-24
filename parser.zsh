@@ -35,14 +35,14 @@ _parse()
     splitbuf1=(${(z)${(z)BUFFER}})
     splitbuf2=(${(z)${(z)BUFFER//$'\n'/ \$\'\\\\n\' }}) # ugly hack, but I have no better idea
     local argnum=0
-    for arg in ${(z)${(z)BUFFER}}; do
+    for arg in $splitbuf1; do
 	((argnum++))
 	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && isleading=1 && continue
 
 	   local issubstring=0 isfile=0 isgroup=0
 	   [[ $start_pos -eq 0 && $arg = 'noglob' ]] && highlight_glob=false
 	   ((start_pos+=${#BUFFER[$start_pos+1,-1]}-${#${BUFFER[$start_pos+1,-1]##[[:space:]]#}}))
-	   ((end_pos=$start_pos+${#arg}))
+	   ((end_pos=start_pos+${#arg}))
 
 	   # Parse the sudo command line
 	   if $sudo; then
@@ -260,9 +260,7 @@ _check_file()
     [[ "${BUFFER[1]}" != "-" && "${#LBUFFER}" == "$end_pos" ]] && matched_file=("${expanded_arg}"*(Noa[1]))
     [[ -e "$expanded_arg" || -e "$matched_file" ]] && lsstyle=none || return 1
     [[ "$expanded_arg" != "$expanded_arg:t" ]] && style="${__chromatic_attrib_zle[di]}";
-    [[ ! -e "$expanded_arg" && -e "$matched_file" ]] && style="${__chromatic_attrib_zle[path]}";
-
-    [[ -e "$matched_file" ]] && : _zsh_highlight_main_highlighter_predicate_switcher bc
+    [[ ! -e "$expanded_arg" && -e "$matched_file" ]] && style="${__chromatic_attrib_zle[path]}" && _reparse=2
 
     [[ ! -z "${__chromatic_attrib_zle[file]}" ]] && lsstyle="${__chromatic_attrib_zle[file]}" && return 0
 

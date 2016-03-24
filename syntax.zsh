@@ -4,16 +4,18 @@ _search()
     zle_highlight=(default:"${__chromatic_attrib_zle[none]}" isearch:"${__chromatic_attrib_zle[search-pattern]}" region:"${__chromatic_attrib_zle[region]}" special:"${__chromatic_attrib_zle[special]}" suffix:"${__chromatic_attrib_zle[suffix]}")
 } && _search
 
+reparse=0
 ## Next rebuilt dynamically region_highlight on any buffer event
 _syntax()
 {
     ## Run parser if buffer has changed
-    if [[ "$BUFFER" != "$_lastbuffer" ]]; then
+    if [[ "$BUFFER" != "$_lastbuffer" || "$_reparse" -gt 0 ]]; then
+	((_reparse--))
 	_parse
 	region_highlight_copy=("${region_highlight[@]}")
+    elif ((CURSOR!=_lastcursor)); then
+     	_reparse=0
     fi
-    #   elif ((CURSOR!=_lastcursor)); then
-    #   fi
 
     ## Restore saved region_highlight (it could have been changed if the cursor has moved)
     region_highlight=("${region_highlight_copy[@]}")

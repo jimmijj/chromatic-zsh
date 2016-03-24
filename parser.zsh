@@ -151,6 +151,7 @@ _check_common_expression()
 	?'..'?|[0-9]##'..'[0-9]##'..'[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
 	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[glob]}";;
 	';') nextleading=1; style="${__chromatic_attrib_zle[separators]}";;
+	[0-9]'>') style="${__chromatic_attrib_zle[redirection]}";;
 	*) if [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
 	       style=$__chromatic_attrib_zle[redirection]
 	   elif [[ $arg[0,1] = $histchars[0,1] ]]; then

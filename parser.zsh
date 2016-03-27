@@ -11,7 +11,7 @@ _parse()
     region_highlight=()
 
     ## list of complex commands, numbers means: 1 - match only on leading position, 0 - anywhere
-    _groups=('0 (,)' '0 [,]' '0 {,}' '0 [[,]]' '1 if,then,elif,else,fi' '1 case,in,esac' '1 for,in,do,done' '1 while,do,done')
+    local -a _groups=('0 (,)' '0 [,]' '0 {,}' '0 [[,]]' '1 if,then,elif,else,fi' '1 case,in,esac' '1 for,in,do,done' '1 while,do,done')
     ## range of each block, and temporary array for future use
     _block=()
     _blockp=()
@@ -31,9 +31,13 @@ _parse()
 	$ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR $ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
     )
 
+    _split "$BUFFER"
+}
 
-    splitbuf1=(${(z)${(z)BUFFER}})
-    splitbuf2=(${(z)${(z)BUFFER//$'\n'/ \$\'\\\\n\' }}) # ugly hack, but I have no better idea
+_split()
+{
+    local splitbuf1=(${(z)${(z)1}})
+    local splitbuf2=(${(z)${(z)1//$'\n'/ \$\'\\\\n\' }}) # ugly hack, but I have no better idea
     local argnum=0
     for arg in $splitbuf1; do
 	((argnum++))
@@ -41,7 +45,7 @@ _parse()
 
 	   local issubstring=0 isfile=0 isgroup=0
 	   [[ $start_pos -eq 0 && $arg = 'noglob' ]] && highlight_glob=false
-	   ((start_pos+=${#BUFFER[$start_pos+1,-1]}-${#${BUFFER[$start_pos+1,-1]##[[:space:]]#}}))
+	   ((start_pos+=${#1[$start_pos+1,-1]}-${#${1[$start_pos+1,-1]##[[:space:]]#}}))
 	   ((end_pos=start_pos+${#arg}))
 
 	   # Parse the sudo command line
@@ -85,7 +89,9 @@ _parse()
 	   ((isfile)) && start_pos=$end_file_pos || start_pos=$end_pos
 	   isleading=$nextleading
     done
+
 }
+
 
 ## Look for expressions which may be present on any position in the command line
 _check_common_expression()

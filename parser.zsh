@@ -3,7 +3,6 @@ _parse()
 {
     emulate -L zsh
     setopt localoptions extendedglob bareglobqual
-    local start_pos=0 end_pos highlight_glob=true isleading=1 nextleading=0 arg style lsstyle start_file_pos end_file_pos sudo=false sudo_arg=false isbrace=0
     typeset -a ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR
     typeset -a ZSH_HIGHLIGHT_TOKENS_REDIRECTION
     typeset -a ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
@@ -31,21 +30,23 @@ _parse()
 	$ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR $ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
     )
 
-    _split "$BUFFER"
+    _split "$BUFFER" 0
 }
 
 _split()
 {
-    local splitbuf1=(${(z)${(z)1}})
-    local splitbuf2=(${(z)${(z)1//$'\n'/ \$\'\\\\n\' }}) # ugly hack, but I have no better idea
+    local buf=$1 init_pos=$2
+    local start_pos=$init_pos end_pos highlight_glob=true isleading=1 nextleading=0 arg style lsstyle start_file_pos end_file_pos sudo=false sudo_arg=false isbrace=0
+    local splitbuf1=(${(z)${(z)buf}})
+    local splitbuf2=(${(z)${(z)buf//$'\n'/ \$\'\\\\n\' }}) # ugly hack, but I have no better idea
     local argnum=0
     for arg in $splitbuf1; do
 	((argnum++))
 	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && isleading=1 && continue
 
 	   local issubstring=0 isfile=0 isgroup=0
-	   [[ $start_pos -eq 0 && $arg = 'noglob' ]] && highlight_glob=false
-	   ((start_pos+=${#1[$start_pos+1,-1]}-${#${1[$start_pos+1,-1]##[[:space:]]#}}))
+	   [[ $start_pos -eq $init_pos && $arg = 'noglob' ]] && highlight_glob=false
+	   ((start_pos+=${#buf[$start_pos+1,-1]}-${#${buf[$start_pos+1,-1]##[[:space:]]#}}))
 	   ((end_pos=start_pos+${#arg}))
 
 	   # Parse the sudo command line

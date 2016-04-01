@@ -36,7 +36,7 @@ _parse()
 _split()
 {
     local buf=$1 init_pos=$2
-    local start_pos=$init_pos end_pos highlight_glob=true isleading=1 nextleading=0 arg style lsstyle start_file_pos end_file_pos sudo=false sudo_arg=false isbrace=0
+    local start_pos=0 end_pos highlight_glob=true isleading=1 nextleading=0 arg style lsstyle start_file_pos end_file_pos sudo=false sudo_arg=false isbrace=0
     local splitbuf1=(${(z)${(z)buf}})
     local splitbuf2=(${(z)${(z)buf//$'\n'/ \$\'\\\\n\' }}) # ugly hack, but I have no better idea
     local argnum=0
@@ -44,59 +44,60 @@ _split()
 	((argnum++))
 	if [[ $splitbuf1[$argnum] != $splitbuf2[$argnum] ]] && isleading=1 && continue
 
-	   local issubstring=0 isfile=0 isgroup=0
-	   [[ $start_pos -eq $init_pos && $arg = 'noglob' ]] && highlight_glob=false
-	   ((start_pos+=${#buf[$start_pos+1,-1]}-${#${buf[$start_pos+1,-1]##[[:space:]]#}}))
-	   ((end_pos=start_pos+${#arg}))
+	local issubstring=0 isfile=0 isgroup=0
+	[[ $start_pos -eq $init_pos && $arg = 'noglob' ]] && highlight_glob=false
+	((start_pos+=${#buf[$start_pos+1,-1]}-${#${buf[$start_pos+1,-1]##[[:space:]]#}}))
+	((end_pos=start_pos+${#arg}))
 
-	   # Parse the sudo command line
-	   if $sudo; then
-	       case "$arg" in
-		   # Flag that requires an argument
-		   '-'[Cgprtu]) sudo_arg=true;;
-		   # This prevents misbehavior with sudo -u -otherargument
-		   '-'*)        sudo_arg=false;;
-		   *)           if $sudo_arg; then
-				    sudo_arg=false
-				else
-				    sudo=false
-				    nextleading=0
-				fi
-				;;
-	       esac
-	   fi
+	# Parse the sudo command line
+	if $sudo; then
+	    case "$arg" in
+		# Flag that requires an argument
+		'-'[Cgprtu]) sudo_arg=true;;
+		# This prevents misbehavior with sudo -u -otherargument
+		'-'*)        sudo_arg=false;;
+		*)           if $sudo_arg; then
+				 sudo_arg=false
+			     else
+				 sudo=false
+				 nextleading=0
+			     fi
+			     ;;
+	    esac
+	fi
 
-	   style="${__chromatic_attrib_zle[default]}"
-	   if ((isleading)); then
-	       nextleading=0
-	       if [[ "$arg" = "sudo" ]]; then
-		   sudo=true
-	       else
-		   _check_common_expression || _check_leading_expression
-	       fi
-	   else
-	       _check_common_expression || _check_subsequent_expression
-	   fi
+	style="${__chromatic_attrib_zle[default]}"
+	if ((isleading)); then
+	    nextleading=0
+	    if [[ "$arg" = "sudo" ]]; then
+		sudo=true
+	    else
+		_check_common_expression "$arg" "$((init_pos+start_pos))" || _check_leading_expression "$arg" "$((init_pos+start_pos))"
+	    fi
+	else
+	    _check_common_expression "$arg" "$((init_pos+start_pos))" || _check_subsequent_expression "$arg" "$((init_pos+start_pos))"
+	fi
 
-	   ((isbrace==1&&isbrace++||(isbrace=0)))
-	   if ((isfile)); then
-	       ((start_file_pos=start_pos+${#arg}-${#arg:t}))
-	       end_file_pos=$end_pos
-	       ((end_pos=end_pos-${#arg:t}))
-	       region_highlight+=("$start_file_pos $end_file_pos $lsstyle")
-	   fi
-	   ((issubstring==0)) && region_highlight+=("$start_pos $end_pos $style")
-	   [[ $isleading == 1 && -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && nextleading=1
-	   ((isfile)) && start_pos=$end_file_pos || start_pos=$end_pos
-	   isleading=$nextleading
+	((isbrace==1&&isbrace++||(isbrace=0)))
+	if ((isfile)); then
+	    ((start_file_pos=start_pos+${#arg}-${#arg:t}))
+	    end_file_pos=$end_pos
+	    ((end_pos=end_pos-${#arg:t}))
+	    region_highlight+=("$((init_pos+start_file_pos)) $((init_pos+end_file_pos)) $lsstyle")
+	fi
+	((issubstring==0)) && region_highlight+=("$((init_pos+start_pos)) $((init_pos+end_pos)) $style")
+	[[ $isleading == 1 && -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && nextleading=1
+	((isfile)) && start_pos=$end_file_pos || start_pos=$end_pos
+	isleading=$nextleading
     done
-
 }
 
 
 ## Look for expressions which may be present on any position in the command line
 _check_common_expression()
 {
+    local arg="$1" start_pos="$2"
+
     ## Look for complex expressions - openning word...
     if [[ -n ${(M)_groups:#* $arg,*} ]]; then
 	if ((isleading)); then
@@ -173,7 +174,8 @@ _check_common_expression()
 ## Look for a leading expressions
 _check_leading_expression()
 {
-    res=$(LC_ALL=C builtin type -w "$arg" 2>/dev/null)
+    local arg="$1" start_pos="$2"
+    local res=$(LC_ALL=C builtin type -w "$arg" 2>/dev/null)
     case $res in
 	*': reserved')  style="${__chromatic_attrib_zle[reserved-words]}";;
 	*': alias')     style="${__chromatic_attrib_zle[aliases]}"
@@ -205,6 +207,7 @@ _check_leading_expression()
 ## Look for a subsequent expressions
 _check_subsequent_expression()
 {
+    local arg="$1" start_pos="$2"
     case "$arg" in
 	'--'*|'-'*) style="${__chromatic_attrib_zle[options]}";;
 	'|'|'|&')
@@ -217,6 +220,7 @@ _check_subsequent_expression()
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[cd]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[cd]}")
 	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos")
+	    _split "${1[3,-2]}" "$((start_pos+2))"
 	    issubstring=1;;
     esac
 }
@@ -225,7 +229,7 @@ _check_subsequent_expression()
 _substring()
 {
     setopt localoptions extendedglob
-    local str_start str_end
+    local arg="$1" start_pos="$2" str_start str_end
     ((str_start=start_pos+1)); str_end=0
     for substr in "${(Qz)arg}"; do
 	((str_start+=${#BUFFER[$str_start+1,-1]}-${#${BUFFER[$str_start+1,-1]##[[:space:]]#}}))

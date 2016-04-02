@@ -150,11 +150,13 @@ _check_common_expression()
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[ex]}")
 	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos")
+	    _split "${1[3,-2]}" "$((start_pos+2))"
 	    issubstring=1;;
 	'`'*'`')
 	    region_highlight+=("$start_pos $((start_pos+1)) ${__chromatic_attrib_zle[builtins]}")
 	    region_highlight+=("$((end_pos-1)) $end_pos ${__chromatic_attrib_zle[builtins]}")
 	    _block+=("$start_pos $((start_pos+1))" "$((end_pos-1)) $end_pos")
+	    _split "${1[2,-2]}" "$((start_pos+1))"
 	    issubstring=1;;
 	?'..'?|[0-9]##'..'[0-9]##'..'[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
 	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[glob]}";;

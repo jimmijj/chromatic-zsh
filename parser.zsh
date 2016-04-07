@@ -238,8 +238,18 @@ _substring()
 	((str_end=str_start+${#substr}))
 	case "$substr" in
 	    '$(('*'))') region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[numbers]}");;
-	    '$('*')') region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[builtins]}");;
-	    '`'*'`') region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[builtins]}");;
+	    '$('*')')
+		region_highlight+=("$str_start $((str_start+2)) ${__chromatic_attrib_zle[ex]}")
+		region_highlight+=("$((str_start+${#substr}-1)) $((str_start+${#substr})) ${__chromatic_attrib_zle[ex]}")
+		_block+=("$str_start $((str_start+2))" "$((str_start+${#substr}-1)) $((str_start+${#substr}))")
+		_split "${substr[3,-2]}" "$((str_start+2))"
+		;;
+	    '`'*'`')
+		region_highlight+=("$str_start $((str_start+1)) ${__chromatic_attrib_zle[ex]}")
+		region_highlight+=("$((str_start+${#substr}-1)) $((str_start+${#substr})) ${__chromatic_attrib_zle[ex]}")
+		_block+=("$str_start $((str_start+1))" "$((str_start+${#substr}-1)) $((str_start+${#substr}))")
+		_split "${substr[2,-2]}" "$((str_start+1))"
+		;;
 	    '$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##|'${'?##'}') region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[parameters]}");;
 	    *\\[[:xdigit:]UXnrtuvx]*) _check_xdigit "$substr";;
 	esac

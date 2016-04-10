@@ -237,7 +237,12 @@ _substring()
 	((str_start+=${#BUFFER[$str_start+1,-1]}-${#${BUFFER[$str_start+1,-1]##[[:space:]]#}}))
 	((str_end=str_start+${#substr}))
 	case "$substr" in
-	    '$(('*'))') region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[numbers]}");;
+	    '$(('*'))') region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[numbers]}")
+			region_highlight+=("$str_start $((str_start+3)) ${__chromatic_attrib_zle[numbers]}")
+			region_highlight+=("$((str_start+${#substr}-2)) $((str_start+${#substr})) ${__chromatic_attrib_zle[numbers]}")
+			_block+=("$str_start $((str_start+3))" "$((str_start+${#substr}-2)) $((str_start+${#substr}))")
+			;;
+
 	    '$('*')')
 		region_highlight+=("$str_start $((str_start+2)) ${__chromatic_attrib_zle[ex]}")
 		region_highlight+=("$((str_start+${#substr}-1)) $((str_start+${#substr})) ${__chromatic_attrib_zle[ex]}")

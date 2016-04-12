@@ -3,11 +3,6 @@ _parse()
 {
     emulate -L zsh
     setopt localoptions extendedglob bareglobqual
-    typeset -a ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR
-    typeset -a ZSH_HIGHLIGHT_TOKENS_REDIRECTION
-    typeset -a ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
-    typeset -a ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS
-    region_highlight=()
 
     ## list of complex commands, numbers means: 1 - match only on leading position, 0 - anywhere
     local -a _groups=('0 (,)' '0 [,]' '0 {,}' '0 [[,]]' '1 if,then,elif,else,fi' '1 case,in,esac' '1 for,in,do,done' '1 while,do,done')
@@ -15,20 +10,11 @@ _parse()
     _block=()
     _blockp=()
 
-    ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR=(
-	'|' '||' ';' '&' '&&' '&|' '|&' '&!' '(' ';;' '{'
-    )
-    ZSH_HIGHLIGHT_TOKENS_REDIRECTION=(
-	'<' '<>' '>' '>|' '>!' '>>' '>>|' '>>!' '<<' '<<-' '<<<' '<&' '>&' '<& -' '>& -' '<& p' '>& p' '&>' '>&|' '>&!' '&>|' '&>!' '>>&' '&>>' '>>&|' '>>&!' '&>>|' '&>>!'
-    )
-    ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS=(
-	'builtin' 'command' 'exec' 'functions' 'nocorrect' 'noglob' 'type' 'unalias' 'unhash' 'whence' 'where' 'which' 'if' 'then' 'elif' 'else' 'do' 'while'
-    )
-
-    # Tokens that are always immediately followed by a command.
-    ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS=(
-	$ZSH_HIGHLIGHT_TOKENS_COMMANDSEPARATOR $ZSH_HIGHLIGHT_TOKENS_PRECOMMANDS
-    )
+    local -a separators=('|' '||' ';' '&' '&&' '&|' '|&' '&!' '(' ';;' '{')
+    local -a redirections=('<' '<>' '>' '>|' '>!' '>>' '>>|' '>>!' '<<' '<<-' '<<<' '<&' '>&' '<& -' '>& -' '<& p' '>& p' '&>' '>&|' '>&!' '&>|' '&>!' '>>&' '&>>' '>>&|' '>>&!' '&>>|' '&>>!')
+    local -a precommands=('builtin' 'command' 'exec' 'functions' 'nocorrect' 'noglob' 'type' 'unalias' 'unhash' 'whence' 'where' 'which' 'if' 'then' 'elif' 'else' 'do' 'while')
+    local -a followed_by_leading=($separators $precommands)
+    region_highlight=()
 
     _split "$BUFFER" 0
 }
@@ -86,7 +72,7 @@ _split()
 	    region_highlight+=("$((init_pos+start_file_pos)) $((init_pos+end_file_pos)) $lsstyle")
 	fi
 	((issubstring==0)) && region_highlight+=("$((init_pos+start_pos)) $((init_pos+end_pos)) $style")
-	[[ $isleading == 1 && -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && nextleading=1
+	[[ $isleading == 1 && -n ${(M)followed_by_leading:#"$arg"} ]] && nextleading=1
 	((isfile)) && start_pos=$end_file_pos || start_pos=$end_pos
 	isleading=$nextleading
     done
@@ -162,7 +148,7 @@ _check_common_expression()
 	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[glob]}";;
 	';') nextleading=1; style="${__chromatic_attrib_zle[separators]}";;
 	[0-9]'>') style="${__chromatic_attrib_zle[redirection]}";;
-	*) if [[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_REDIRECTION:#"$arg"} ]]; then
+	*) if [[ -n ${(M)redirections:#"$arg"} ]]; then
 	       style=$__chromatic_attrib_zle[redirection]
 	   elif [[ $arg[0,1] = $histchars[0,1] ]]; then
 	       style=$__chromatic_attrib_zle[history-expansion]
@@ -180,9 +166,11 @@ _check_leading_expression()
     local res=$(LC_ALL=C builtin type -w "$arg" 2>/dev/null)
     case $res in
 	*': reserved')  style="${__chromatic_attrib_zle[reserved-words]}";;
-	*': alias')     style="${__chromatic_attrib_zle[aliases]}"
-			local aliased_command="${"$(alias -- $arg)"#*=}"
-			[[ -n ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$aliased_command"} && -z ${(M)ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS:#"$arg"} ]] && ZSH_HIGHLIGHT_TOKENS_FOLLOWED_BY_COMMANDS+=($arg);;
+	*': alias')
+	    style="${__chromatic_attrib_zle[aliases]}"
+	    local aliased_command="${"$(alias -- $arg)"#*=}"
+	    [[ -n ${(M)followed_by_leading:#"$aliased_command"} && -z ${(M)followed_by_leading:#"$arg"} ]] && followed_by_leading+=($arg)
+	    ;;
 	*': builtin')   style="${__chromatic_attrib_zle[builtins]}";;
 	*': function')  style="${__chromatic_attrib_zle[functions]}";;
 	*': command'|*': hashed') style="${__chromatic_attrib_zle[ex]}";;
@@ -237,12 +225,18 @@ _substring()
 	((str_start+=${#BUFFER[$str_start+1,-1]}-${#${BUFFER[$str_start+1,-1]##[[:space:]]#}}))
 	((str_end=str_start+${#substr}))
 	case "$substr" in
-	    '$(('*'))') region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[numbers]}")
-			region_highlight+=("$str_start $((str_start+3)) ${__chromatic_attrib_zle[numbers]}")
-			region_highlight+=("$((str_start+${#substr}-2)) $((str_start+${#substr})) ${__chromatic_attrib_zle[numbers]}")
-			_block+=("$str_start $((str_start+3))" "$((str_start+${#substr}-2)) $((str_start+${#substr}))")
-			;;
-
+	    '$(('*'))')
+		region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[numbers]}")
+		region_highlight+=("$str_start $((str_start+3)) ${__chromatic_attrib_zle[numbers]}")
+		region_highlight+=("$((str_start+${#substr}-2)) $((str_start+${#substr})) ${__chromatic_attrib_zle[numbers]}")
+		_block+=("$str_start $((str_start+3))" "$((str_start+${#substr}-2)) $((str_start+${#substr}))")
+		;;
+	    '$['*']')
+		region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[numbers]}")
+		region_highlight+=("$str_start $((str_start+2)) ${__chromatic_attrib_zle[numbers]}")
+		region_highlight+=("$((str_start+${#substr}-1)) $((str_start+${#substr})) ${__chromatic_attrib_zle[numbers]}")
+		_block+=("$str_start $((str_start+2))" "$((str_start+${#substr}-1)) $((str_start+${#substr}))")
+		;;
 	    '$('*')')
 		region_highlight+=("$str_start $((str_start+2)) ${__chromatic_attrib_zle[ex]}")
 		region_highlight+=("$((str_start+${#substr}-1)) $((str_start+${#substr})) ${__chromatic_attrib_zle[ex]}")

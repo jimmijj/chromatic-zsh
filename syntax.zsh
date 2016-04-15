@@ -38,17 +38,15 @@ _syntax()
 _redefine_widgets()
 {
     local widget
-    for widget in ${${(f)"$(builtin zle -la)"}:#(.*|_*|run-help|beep|auto-*|*-argument|argument-base|clear-screen|describe-key-briefly|history-incremental*|kill-buffer|overwrite-mode|push-input|push-line-or-edit|reset-prompt|set-local-history|split-undo|undefined-key|what-cursor-position|where-is)}; do
+    for widget in ${${(f)"$(builtin zle -la)"}:#(.*|_*|run-help|beep|auto-*|*-argument|argument-base|clear-screen|describe-key-briefly|history-incremental*|kill-buffer|overwrite-mode|push-input|push-line-or-edit|reset-prompt|set-local-history|split-undo|undefined-key|what-cursor-position|where-is|yank*)}; do
 	case $widgets[$widget] in
 
 	    # Builtin widgets: override and make it call the builtin ".widget".
-	    builtin) eval "_._$widget() { builtin zle .$widget -- \"\$@\" && _syntax }; \
-                     zle -N $widget _._$widget";;
+	    builtin) eval "_._$widget() { builtin zle .$widget -- \"\$@\" && _syntax }; zle -N $widget _._$widget";;
 
 	    # Completion widget
 	    completion:*)
-		eval "zle -C _._-$widget ${${widgets[$widget]#*:}/:/ }; _._$widget() { builtin zle _._-$widget -- \"\$@\" && _syntax }; \
-                          zle -N $widget _._$widget";;
+		eval "zle -C _._-$widget ${${widgets[$widget]#*:}/:/ }; _._$widget() { builtin zle _._-$widget -- \"\$@\" && _syntax }; zle -N $widget _._$widget";;
 
 	    ## Skip widgets defined by users and the like
 	    *) ;;
@@ -59,6 +57,12 @@ _redefine_widgets()
     for widget in history-incremental-pattern-search-backward history-incremental-pattern-search-forward history-incremental-search-backward history-incremental-search-forward; do
 	eval "_._$widget() { zle_highlight=(default:\${__chromatic_attrib_zle[search-line]} isearch:\${__chromatic_attrib_zle[search-pattern]}); builtin zle .$widget -- \"\$@\" && _search && _syntax }; zle -N $widget _._$widget"
     done
+
+    ## For yank* widgets set appropriate flag
+    for widget in yank yank-pop; do
+	eval "_._$widget() { builtin zle .$widget -- \"\$@\" && _syntax && zle -f yank }; zle -N $widget _._$widget"
+    done
+
 } && _redefine_widgets
 
 ## Load parser

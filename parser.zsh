@@ -127,11 +127,17 @@ _check_common_expression()
 	    style="${__chromatic_attrib_zle[parameters]}";
 	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos");;
 	'$(('*'))')
-	    style="${__chromatic_attrib_zle[numbers]}"
-	    _block+=("$start_pos $((start_pos+3))" "$((end_pos-2)) $end_pos");;
+	    region_highlight+=("$start_pos $((start_pos+3)) ${__chromatic_attrib_zle[numbers]}")
+	    region_highlight+=("$((start_pos+${#arg}-2)) $((start_pos+${#arg})) ${__chromatic_attrib_zle[numbers]}")
+	    _block+=("$start_pos $((start_pos+3))" "$((end_pos-2)) $end_pos")
+	    _split "${arg[4,-3]}" "$((start_pos+3))"
+	    issubstring=1;;
 	'$['*']')
-	    style="${__chromatic_attrib_zle[numbers]}"
-	    _block+=("$start_pos $((start_pos+2))" "$((end_pos-1)) $end_pos");;
+	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[numbers]}")
+	    region_highlight+=("$((start_pos+${#arg}-1)) $((start_pos+${#arg})) ${__chromatic_attrib_zle[numbers]}")
+	    _block+=("$start_pos $((start_pos+2))" "$((start_pos+${#arg}-1)) $((start_pos+${#arg}))")
+	    _split "${arg[3,-2]}" "$((start_pos+2))"
+	    issubstring=1;;
 	'$('*')')
 	    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[ex]}")
 	    region_highlight+=("$((start_pos+${#arg}-1)) $((start_pos+${#arg})) ${__chromatic_attrib_zle[ex]}")
@@ -185,8 +191,11 @@ _check_leading_expression()
 	    else
 	    case "$arg" in
 		'(('*'))')
-		    style="${__chromatic_attrib_zle[numbers]}"
-		    _block+=("$start_pos $((start_pos+2))" "$((end_pos-2)) $end_pos");;
+		    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[numbers]}")
+		    region_highlight+=("$((start_pos+${#arg}-2)) $((start_pos+${#arg})) ${__chromatic_attrib_zle[numbers]}")
+		    _block+=("$start_pos $((start_pos+2))" "$((end_pos-2)) $end_pos")
+		    _split "${arg[3,-3]}" "$((start_pos+2))"
+		    issubstring=1;;
 		*) ;;
 	    esac
 	    fi
@@ -215,7 +224,7 @@ _check_subsequent_expression()
     esac
 }
 
-## Highlight selected atoms inside double-quoted string
+## Highlight selected blocks inside other blocks
 _substring()
 {
     setopt localoptions extendedglob
@@ -226,16 +235,16 @@ _substring()
 	((str_end=str_start+${#substr}))
 	case "$substr" in
 	    '$(('*'))')
-		region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[numbers]}")
 		region_highlight+=("$str_start $((str_start+3)) ${__chromatic_attrib_zle[numbers]}")
 		region_highlight+=("$((str_start+${#substr}-2)) $((str_start+${#substr})) ${__chromatic_attrib_zle[numbers]}")
 		_block+=("$str_start $((str_start+3))" "$((str_start+${#substr}-2)) $((str_start+${#substr}))")
+		_split "${arg[4,-3]}" "$((start_pos+3))"
 		;;
 	    '$['*']')
-		region_highlight+=("$str_start $str_end ${__chromatic_attrib_zle[numbers]}")
 		region_highlight+=("$str_start $((str_start+2)) ${__chromatic_attrib_zle[numbers]}")
 		region_highlight+=("$((str_start+${#substr}-1)) $((str_start+${#substr})) ${__chromatic_attrib_zle[numbers]}")
 		_block+=("$str_start $((str_start+2))" "$((str_start+${#substr}-1)) $((str_start+${#substr}))")
+		_split "${arg[3,-2]}" "$((start_pos+2))"
 		;;
 	    '$('*')')
 		region_highlight+=("$str_start $((str_start+2)) ${__chromatic_attrib_zle[ex]}")

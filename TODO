@@ -3,7 +3,6 @@
 - add pattern highlight
 - expand special characters
 - nice feature: separate expansion flags from the parameter, like ${(kv)abc}
-- biger challange: loop over nested sub-words (double quotes, command-, process-substitution, subshells).
 
 
 ====

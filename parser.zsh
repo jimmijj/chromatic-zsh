@@ -150,7 +150,7 @@ _check_common_expression()
 	    _block+=("$start_pos $((start_pos+1))" "$((start_pos+${#arg}-1)) $((start_pos+${#arg}))")
 	    _split "${arg[2,-2]}" "$((start_pos+1))"
 	    issubstring=1;;
-	?'..'?|[0-9]##'..'[0-9]##'..'[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
+	?'..'?|(-(#c0,1)[0-9]##'..')(#c1,2)-(#c0,1)[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
 	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[glob]}";;
 	';') nextleading=1; style="${__chromatic_attrib_zle[separators]}";;
 	[0-9]'>') style="${__chromatic_attrib_zle[redirection]}";;

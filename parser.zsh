@@ -185,8 +185,8 @@ _check_leading_expression()
 		region_highlight+=("$start_pos $((start_pos+${#arg}-2)) ${__chromatic_attrib_zle[parameters]}")
 		region_highlight+=("$((start_pos+${#arg}-1)) $((start_pos+${#arg})) ${__chromatic_attrib_zle[functions]}")
 		_blockp+=("0 (,):$((start_pos+${#arg}-1)) $((start_pos+${#arg}))")
-            elif [[ $arg == [a-zA-Z0-9_]##(|\[*\])=* ]]; then
-		style="${__chromatic_attrib_zle[parameters]}"
+            elif [[ $arg =~ ([a-zA-Z0-9_]+(|\\[.*\\]))=.* ]]; then
+		region_highlight+=("$start_pos $((start_pos+mend[1])) ${__chromatic_attrib_zle[parameters]}")
 		nextleading=1
 	    elif _check_command; then
 		style=$__chromatic_attrib_zle[command_prefix]

@@ -103,7 +103,7 @@ _check_common_expression()
 	    _block+=("${_blockp[-1]#*:}" "$start_pos $end_pos")
 	    _blockp=(${_blockp:0:-1})
 	    style="${__chromatic_attrib_zle[reserved-words]}"
-	    [[ $arg == ')' ]] && style="${__chromatic_attrib_zle[functions]}"
+	    [[ $arg == ')' ]] && style="${__chromatic_attrib_zle[functions]}" && nextleading=1
 	    [[ $arg == ']' ]] && style="${__chromatic_attrib_zle[builtins]}"
 	fi
 	return 0

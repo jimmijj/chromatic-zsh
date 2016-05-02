@@ -242,13 +242,13 @@ _substring()
 		region_highlight+=("$str_start $((str_start+3)) ${__chromatic_attrib_zle[numbers]}")
 		region_highlight+=("$((str_start+${#substr}-2)) $((str_start+${#substr})) ${__chromatic_attrib_zle[numbers]}")
 		_block+=("$str_start $((str_start+3))" "$((str_start+${#substr}-2)) $((str_start+${#substr}))")
-		_split "${arg[4,-3]}" "$((start_pos+3))"
+		_split "${substr[4,-3]}" "$((str_start+3))"
 		;;
 	    '$['*']')
 		region_highlight+=("$str_start $((str_start+2)) ${__chromatic_attrib_zle[numbers]}")
 		region_highlight+=("$((str_start+${#substr}-1)) $((str_start+${#substr})) ${__chromatic_attrib_zle[numbers]}")
 		_block+=("$str_start $((str_start+2))" "$((str_start+${#substr}-1)) $((str_start+${#substr}))")
-		_split "${arg[3,-2]}" "$((start_pos+2))"
+		_split "${substr[3,-2]}" "$((str_start+2))"
 		;;
 	    '$('*')')
 		region_highlight+=("$str_start $((str_start+2)) ${__chromatic_attrib_zle[ex]}")

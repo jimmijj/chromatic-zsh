@@ -11,7 +11,7 @@ __chromatic_attrib=(
     files          '0'
     functions      '33'
     glob           '34'
-    block          '46'
+    block          '104'
     manuals        '32'
     numbers        '36'
     options        '36'

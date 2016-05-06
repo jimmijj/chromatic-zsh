@@ -11,7 +11,7 @@ _parse()
     _blockp=()
 
     local -a separators=('|' '||' ';' '&' '&&' '&|' '|&' '&!' '(' ';;' '{')
-    local -a redirections=('<' '<>' '>' '>|' '>!' '>>' '>>|' '>>!' '<<' '<<-' '<<<' '<&' '>&' '<& -' '>& -' '<& p' '>& p' '&>' '>&|' '>&!' '&>|' '&>!' '>>&' '&>>' '>>&|' '>>&!' '&>>|' '&>>!')
+    local -a redirections=('<' '<>' '>' '>|' '>!' '>>' '>>|' '>>!' '<<' '<<-' '<<<' '<&' '>&' '<&-' '>&-' '<&p' '>&p' '&>' '>&|' '>&!' '&>|' '&>!' '>>&' '&>>' '>>&|' '>>&!' '&>>|' '&>>!')
     local -a precommands=('builtin' 'command' 'exec' 'functions' 'nocorrect' 'noglob' 'type' 'unalias' 'unhash' 'whence' 'where' 'which' 'if' 'then' 'elif' 'else' 'do' 'while')
     local -a followed_by_leading=($separators $precommands)
     region_highlight=()
@@ -153,7 +153,7 @@ _check_common_expression()
 	?'..'?|(-(#c0,1)[0-9]##'..')(#c1,2)-(#c0,1)[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
 	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[glob]}";;
 	';') nextleading=1; style="${__chromatic_attrib_zle[separators]}";;
-	[0-9]'>') style="${__chromatic_attrib_zle[redirection]}";;
+	[0-9](\>|\<)(|\&)) style="${__chromatic_attrib_zle[redirection]}";;
 	*) if [[ -n ${(M)redirections:#"$arg"} ]]; then
 	       style=$__chromatic_attrib_zle[redirection]
 	   elif [[ $arg[0,1] = $histchars[0,1] ]]; then

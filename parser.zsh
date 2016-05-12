@@ -119,7 +119,7 @@ _check_common_expression()
 	'"'*'"')
 	    style="${__chromatic_attrib_zle[comments]}"
 	    region_highlight+=("$start_pos $end_pos $style")
-	    _substring "$arg" "$((init_pos+start_pos))"
+	    _substring "$arg" "$start_pos"
 	    issubstring=1
 	    ;;
 	'$'[-#'$''*'@?!]|'$'[a-zA-Z0-9_]##) style="${__chromatic_attrib_zle[parameters]}";;

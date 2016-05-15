@@ -7,7 +7,7 @@ __chromatic_attrib=(
     none           '0'
     builtins       '1;33'
     comments       '2;37'
-    defaults       '0'
+    default        '0'
     files          '0'
     functions      '33'
     glob           '34'

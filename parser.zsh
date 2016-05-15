@@ -151,6 +151,13 @@ _check_common_expression()
 	    _split "${arg[2,-2]}" "$((start_pos+1))"
 	    issubstring=1;;
 	?'..'?|(-(#c0,1)[0-9]##'..')(#c1,2)-(#c0,1)[0-9]##) ((isbrace==2)) && style="${__chromatic_attrib_zle[numbers]}";;
+       (?'..'?|(-(#c0,1)[0-9]##'..')(#c1,2)-(#c0,1)[0-9]##)\}([[:alnum:]]#\{(?'..'?|(-(#c0,1)[0-9]##'..')(#c1,2)-(#c0,1)[0-9]##)\})##)
+	    if ((isbrace==2)); then
+		_block+=("$((start_pos-1)) $((start_pos))" "$((start_pos+${#arg}-1)) $((start_pos+${#arg}))")
+		region_highlight+=("$start_pos $((start_pos+${#arg}-1)) ${__chromatic_attrib_zle[numbers]}")
+		region_highlight+=("$((start_pos+${#arg}-1)) $((start_pos+${#arg})) ${__chromatic_attrib_zle[reserved-words]}")
+	    fi
+	    issubstring=1;;
 	*'*'*) $highlight_glob && style="${__chromatic_attrib_zle[glob]}";;
 	';') nextleading=1; style="${__chromatic_attrib_zle[separators]}";;
 	[0-9](\>|\<)(|\&)) style="${__chromatic_attrib_zle[redirection]}";;

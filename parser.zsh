@@ -94,6 +94,7 @@ _check_common_expression()
 		[[ $arg == '{' ]] && isbrace=1
 	elif [[ ${${(M)_groups:#* $arg,*}% *} == 0 ]]; then
 	    _blockp+=(${(M)_groups:#* $arg,*}":$start_pos $end_pos")
+	    [[ $arg == '(' ]] && style="${__chromatic_attrib_zle[functions]}"
 	    [[ $arg == '{' ]] && isbrace=1 && style="${__chromatic_attrib_zle[reserved-words]}"
 	fi
 	return 0
@@ -163,6 +164,9 @@ _check_common_expression()
 	[0-9](\>|\<)(|\&)) style="${__chromatic_attrib_zle[redirection]}";;
 	*) if [[ -n ${(M)redirections:#"$arg"} ]]; then
 	       style=$__chromatic_attrib_zle[redirection]
+           elif [[ $arg == [a-zA-Z0-9_]##(|\[*\])=\(* ]]; then
+		region_highlight+=("$((start_pos+${#arg}-1)) $((start_pos+${#arg})) ${__chromatic_attrib_zle[functions]}")
+		_blockp+=("0 (,):$((start_pos+${#arg}-1)) $((start_pos+${#arg}))")
 	   elif [[ $arg[0,1] = $histchars[0,1] ]]; then
 	       style=$__chromatic_attrib_zle[history-expansion]
 	   else

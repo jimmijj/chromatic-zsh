@@ -165,6 +165,7 @@ _check_common_expression()
 	*) if [[ -n ${(M)redirections:#"$arg"} ]]; then
 	       style=$__chromatic_attrib_zle[redirection]
            elif [[ $arg == [a-zA-Z0-9_]##(|\[*\])=\(* ]]; then
+		((isleading)) && return 1
 		region_highlight+=("$((start_pos+${#arg}-1)) $((start_pos+${#arg})) ${__chromatic_attrib_zle[functions]}")
 		_blockp+=("0 (,):$((start_pos+${#arg}-1)) $((start_pos+${#arg}))")
 	   elif [[ $arg[0,1] = $histchars[0,1] ]]; then

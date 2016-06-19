@@ -197,7 +197,7 @@ _check_leading_expression()
 		region_highlight+=("$start_pos $((start_pos+${#arg}-2)) ${__chromatic_attrib_zle[parameters]}")
 		region_highlight+=("$((start_pos+${#arg}-1)) $((start_pos+${#arg})) ${__chromatic_attrib_zle[functions]}")
 		_blockp+=("0 (,):$((start_pos+${#arg}-1)) $((start_pos+${#arg}))")
-            elif [[ $arg =~ ([a-zA-Z0-9_]+(|\\[.*\\]))=.* ]]; then
+            elif [[ $arg =~ ([a-zA-Z0-9_]+(\\[.*\\])?)=.* ]]; then
 		region_highlight+=("$start_pos $((start_pos+mend[1])) ${__chromatic_attrib_zle[parameters]}")
 		nextleading=1
 	    elif _check_command; then
@@ -205,15 +205,15 @@ _check_leading_expression()
 	    elif [[ $arg[0,1] == $histchars[0,1] || $arg[0,1] == $histchars[2,2] ]]; then
 		style=$__chromatic_attrib_zle[history-expansion]
 	    else
-	    case "$arg" in
-		'(('*'))')
-		    region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[numbers]}")
-		    region_highlight+=("$((start_pos+${#arg}-2)) $((start_pos+${#arg})) ${__chromatic_attrib_zle[numbers]}")
-		    _block+=("$start_pos $((start_pos+2))" "$((end_pos-2)) $end_pos")
-		    _split "${arg[3,-3]}" "$((start_pos+2))"
-		    issubstring=1;;
-		*) ;;
-	    esac
+		case "$arg" in
+		    '(('*'))')
+			region_highlight+=("$start_pos $((start_pos+2)) ${__chromatic_attrib_zle[numbers]}")
+			region_highlight+=("$((start_pos+${#arg}-2)) $((start_pos+${#arg})) ${__chromatic_attrib_zle[numbers]}")
+			_block+=("$start_pos $((start_pos+2))" "$((end_pos-2)) $end_pos")
+			_split "${arg[3,-3]}" "$((start_pos+2))"
+			issubstring=1;;
+		    *) ;;
+		esac
 	    fi
 	    ;;
     esac

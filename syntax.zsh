@@ -20,8 +20,8 @@ _syntax()
     ## Restore saved region_highlight (it could have been changed if the cursor has moved)
     region_highlight=("${region_highlight_copy[@]}")
 
-    ## Highlight cursor
-    region_highlight+=("$CURSOR $(($CURSOR+1)) standout")
+    ## Cursor highlighting as a standout is not needed in the newest gnome-terminal and its derivatives (eg. terminator)
+    #region_highlight+=("$CURSOR $((CURSOR+1)) standout")
 
     ## Highlight complex commands if cursor is on their position
     for ts bs te be in ${(zkv)_block}; do
